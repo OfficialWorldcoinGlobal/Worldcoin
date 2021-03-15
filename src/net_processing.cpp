@@ -1994,6 +1994,15 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             vRecv >> LIMITED_STRING(strSubVer, MAX_SUBVERSION_LENGTH);
             cleanSubVer = SanitizeString(strSubVer);
         }
+        if (!pfrom->m_client_verified) {
+            if (strSubVersion.find("Worldcoin") != std::string::npos) {
+                pfrom->m_client_verified = true;
+            } else {
+                LogPrint(BCLog::NET, "peer=%d not a worldcoin-compatible client; disconnecting\n", pfrom->GetId());
+                pfrom->fDisconnect = true;
+                return false;
+            }
+        }
         if (!vRecv.empty()) {
             vRecv >> nStartingHeight;
         }
@@ -2111,6 +2120,12 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         // Must have a version message before anything else
         LOCK(cs_main);
         Misbehaving(pfrom->GetId(), 1);
+        return false;
+    }
+
+    if (pfrom->nVersion < MIN_PEER_PROTO_VERSION) {
+        LogPrint(BCLog::NET, "peer=%d using obsolete version %i; disconnecting\n", pfrom->GetId(), pfrom->nVersion);
+        pfrom->fDisconnect = true;
         return false;
     }
 

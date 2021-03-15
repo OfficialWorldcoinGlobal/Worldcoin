@@ -9,27 +9,34 @@
 #include <chain.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <util/system.h>
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
+    int64_t retargetSpacing = pindexLast->nHeight+1 >= params.nDiffChangeTarget ? params.nPowTargetSpacingRe : params.nPowTargetSpacing;
+    int64_t retargetInterval = pindexLast->nHeight+1 >= params.nDiffChangeTarget ? params.DifficultyAdjustmentIntervalRe() : params.DifficultyAdjustmentInterval();
+
+    if (pindexLast == nullptr)
+        return nProofOfWorkLimit;
+
     // Only change once per difficulty adjustment interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
+    if ((pindexLast->nHeight+1) % retargetInterval != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
             // Special difficulty rule for testnet:
             // If the new block's timestamp is more than 2* 10 minutes
             // then allow mining of a min-difficulty block.
-            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
+            if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + retargetSpacing*2)
                 return nProofOfWorkLimit;
             else
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % retargetInterval != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -38,37 +45,47 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     }
 
     // Go back by what we want to be 14 days worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
+    // Litecoin: This fixes an issue where a 51% attack can change difficulty at will.
+    // Go back the full period unless it's the first retarget after genesis. Code courtesy of Art Forz
+    int blockstogoback = params.DifficultyAdjustmentInterval()-1;
+    if ((pindexLast->nHeight+1) != retargetInterval)
+        blockstogoback = retargetInterval;
+
+    // Go back by what we want to be 14 days worth of blocks
+    int nHeightFirst = pindexLast->nHeight - blockstogoback;
     assert(nHeightFirst >= 0);
     const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
     assert(pindexFirst);
 
-    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
-}
-
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
-{
-    if (params.fPowNoRetargeting)
-        return pindexLast->nBits;
+    int64_t retargetTimespan = pindexLast->nHeight+1 >= params.nDiffChangeTarget ? params.nPowTargetTimespanRe : params.nPowTargetTimespan;
 
     // Limit adjustment step
-    int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
-    if (nActualTimespan < params.nPowTargetTimespan/4)
-        nActualTimespan = params.nPowTargetTimespan/4;
-    if (nActualTimespan > params.nPowTargetTimespan*4)
-        nActualTimespan = params.nPowTargetTimespan*4;
+    int64_t nActualTimespan = pindexLast->GetBlockTime() - pindexFirst->GetBlockTime();
+
+    if (pindexLast->nHeight+1 >= params.nDiffChangeTarget) {
+        if (nActualTimespan < (retargetTimespan - (retargetTimespan / 10)))
+            nActualTimespan = (retargetTimespan - (retargetTimespan / 10));
+        if (nActualTimespan > (retargetTimespan + (retargetTimespan / 10)))
+            nActualTimespan = (retargetTimespan + (retargetTimespan / 10));
+    } else {
+        if (nActualTimespan < retargetTimespan / 4)
+            nActualTimespan = retargetTimespan / 4;
+        if (nActualTimespan > retargetTimespan * 4)
+            nActualTimespan = retargetTimespan * 4;
+    }
 
     // Retarget
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     bnNew *= nActualTimespan;
-    bnNew /= params.nPowTargetTimespan;
+    bnNew /= retargetTimespan;
 
     if (bnNew > bnPowLimit)
         bnNew = bnPowLimit;
 
     return bnNew.GetCompact();
+
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)

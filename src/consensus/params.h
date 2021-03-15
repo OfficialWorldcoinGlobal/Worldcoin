@@ -77,7 +77,11 @@ struct Params {
     bool fPowNoRetargeting;
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
+    int64_t nPowTargetSpacingRe;
+    int64_t nPowTargetTimespanRe;
+    int64_t nDiffChangeTarget;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
+    int64_t DifficultyAdjustmentIntervalRe() const { return nPowTargetTimespanRe / nPowTargetSpacingRe; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 };

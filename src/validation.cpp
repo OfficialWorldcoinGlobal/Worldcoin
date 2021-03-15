@@ -1220,14 +1220,19 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    CAmount nSubsidy = 1 * COIN;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy >>= halvings;
+    if (nHeight < 600000) {
+        nSubsidy = 32 * COIN;
+    } else {
+        nSubsidy = 64 * COIN;
+        int blocks = nHeight - consensusParams.nDiffChangeTarget;
+        int weeks = (blocks / 20160) + 1;
+        for (int i = 0; i < weeks; i++) {
+            nSubsidy -= (nSubsidy/100);
+        }
+        return nSubsidy;
+    }
     return nSubsidy;
 }
 
@@ -3271,7 +3276,8 @@ static bool FindUndoPos(BlockValidationState &state, int nFile, FlatFilePos &pos
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    // Check proof of work matches claimed amount
+    if (block == (const CBlockHeader) Params().GenesisBlock())
+        return true;
     if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 

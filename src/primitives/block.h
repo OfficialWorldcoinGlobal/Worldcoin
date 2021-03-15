@@ -60,6 +60,18 @@ public:
         return (nBits == 0);
     }
 
+    bool operator==(const CBlockHeader& other) const
+    {
+        if (this->nVersion == other.nVersion &&
+            this->hashPrevBlock == other.hashPrevBlock &&
+            this->hashMerkleRoot == other.hashMerkleRoot &&
+            this->nTime == other.nTime &&
+            this->nBits == other.nBits &&
+            this->nNonce == other.nNonce)
+            return true;
+        return false;
+    }
+
     uint256 GetHash() const;
 
     uint256 GetPoWHash() const;

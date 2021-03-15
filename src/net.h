@@ -780,6 +780,7 @@ public:
     bool fSentAddr{false};
     CSemaphoreGrant grantOutbound;
     std::atomic<int> nRefCount{0};
+    bool m_client_verified{false};
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
