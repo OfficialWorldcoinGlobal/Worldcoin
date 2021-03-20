@@ -3278,7 +3278,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
 {
     if (block == (const CBlockHeader) Params().GenesisBlock())
         return true;
-    if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
+    if (fCheckPOW && g_ibd_complete && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
 
     return true;
