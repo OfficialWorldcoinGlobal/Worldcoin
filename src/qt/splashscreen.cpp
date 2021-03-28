@@ -39,7 +39,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     // set reference point, paddings
     int paddingLeft             = 14;
-    int paddingTop              = 546;
+    int paddingTop              = 536;
     int titleVersionVSpace      = 22;
     int titleCopyrightVSpace    = 27;
 
