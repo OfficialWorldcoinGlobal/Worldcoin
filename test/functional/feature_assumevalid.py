@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for skipping signature validation on old blocks.
 
 Test logic for skipping signature validation on blocks which we've assumed
-valid (https://github.com/bitcoin/bitcoin/pull/9484)
+valid (https://github.com/worldcoin/worldcoin/pull/9484)
 
 We build a chain that includes and invalid signature for one of the
 transactions:
@@ -32,7 +32,7 @@ Start three nodes:
 import time
 
 from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.key import ECKey
+from test_framework.key import CECKey
 from test_framework.messages import (
     CBlockHeader,
     COutPoint,
@@ -40,13 +40,12 @@ from test_framework.messages import (
     CTxIn,
     CTxOut,
     msg_block,
-    msg_headers,
+    msg_headers
 )
 from test_framework.mininode import P2PInterface
 from test_framework.script import (CScript, OP_TRUE)
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WorldcoinTestFramework
 from test_framework.util import assert_equal
-
 
 class BaseNode(P2PInterface):
     def send_header_for_blocks(self, new_blocks):
@@ -54,12 +53,10 @@ class BaseNode(P2PInterface):
         headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
-
-class AssumeValidTest(BitcoinTestFramework):
+class AssumeValidTest(WorldcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
-        self.rpc_timeout = 120
 
     def setup_network(self):
         self.add_nodes(3)
@@ -75,7 +72,7 @@ class AssumeValidTest(BitcoinTestFramework):
                 break
             try:
                 p2p_conn.send_message(msg_block(self.blocks[i]))
-            except IOError:
+            except IOError as e:
                 assert not p2p_conn.is_connected
                 break
 
@@ -107,9 +104,9 @@ class AssumeValidTest(BitcoinTestFramework):
         self.blocks = []
 
         # Get a pubkey for the coinbase TXO
-        coinbase_key = ECKey()
-        coinbase_key.generate()
-        coinbase_pubkey = coinbase_key.get_pubkey().get_bytes()
+        coinbase_key = CECKey()
+        coinbase_key.set_secretbytes(b"horsebattery")
+        coinbase_pubkey = coinbase_key.get_pubkey()
 
         # Create the first block with a coinbase output to our key
         height = 1
@@ -183,13 +180,12 @@ class AssumeValidTest(BitcoinTestFramework):
         for i in range(2202):
             p2p1.send_message(msg_block(self.blocks[i]))
         # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
-        p2p1.sync_with_ping(960)
+        p2p1.sync_with_ping(120)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
         self.assert_blockchain_height(self.nodes[2], 101)
-
 
 if __name__ == '__main__':
     AssumeValidTest().main()

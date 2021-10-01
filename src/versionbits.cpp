@@ -1,9 +1,24 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <versionbits.h>
 #include <consensus/params.h>
+
+const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+    {
+        /*.name =*/ "testdummy",
+        /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "csv",
+        /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "segwit",
+        /*.gbt_force =*/ true,
+    }
+};
 
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
@@ -94,6 +109,7 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
     return state;
 }
 
+// return the numerical statistics of blocks signalling the specified BIP9 condition in this current period
 BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const
 {
     BIP9Stats stats = {};

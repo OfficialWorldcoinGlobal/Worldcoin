@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Copyright (c) 2016-2019 The Bitcoin Core developers
+# Copyright (c) 2016 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 ###   This script attempts to download the signature file SHA256SUMS.asc from
-###   bitcoincore.org and bitcoin.org and compares them.
+###   worldcoincore.org and worldcoin.org and compares them.
 ###   It first checks if the signature passes, and then downloads the files specified in
 ###   the file, and checks if the hashes of these files match those that are specified
 ###   in the signature file.
@@ -13,21 +13,21 @@
 
 export LC_ALL=C
 function clean_up {
-   for file in "$@"
+   for file in $*
    do
       rm "$file" 2> /dev/null
    done
 }
 
-WORKINGDIR="/tmp/bitcoin_verify_binaries"
+WORKINGDIR="/tmp/worldcoin_verify_binaries"
 TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-HOST1="https://bitcoincore.org"
-HOST2="https://bitcoin.org"
+HOST1="https://worldcoincore.org"
+HOST2="https://worldcoin.org"
 BASEDIR="/bin/"
-VERSIONPREFIX="bitcoin-core-"
+VERSIONPREFIX="worldcoin-core-"
 RCVERSIONSTRING="rc"
 
 if [ ! -d "$WORKINGDIR" ]; then
@@ -38,7 +38,7 @@ cd "$WORKINGDIR" || exit 1
 
 #test if a version number has been passed as an argument
 if [ -n "$1" ]; then
-   #let's also check if the version number includes the prefix 'bitcoin-',
+   #let's also check if the version number includes the prefix 'worldcoin-',
    #  and add this prefix if it doesn't
    if [[ $1 == "$VERSIONPREFIX"* ]]; then
       VERSION="$1"
@@ -82,20 +82,22 @@ else
    exit 2
 fi
 
-if ! WGETOUT=$(wget -N "$HOST1$BASEDIR$SIGNATUREFILENAME" 2>&1); then
+#first we fetch the file containing the signature
+WGETOUT=$(wget -N "$HOST1$BASEDIR$SIGNATUREFILENAME" 2>&1)
+
+#and then see if wget completed successfully
+if [ $? -ne 0 ]; then
    echo "Error: couldn't fetch signature file. Have you specified the version number in the following format?"
-   # shellcheck disable=SC1087
    echo "[$VERSIONPREFIX]<version>-[$RCVERSIONSTRING[0-9]] (example: ${VERSIONPREFIX}0.10.4-${RCVERSIONSTRING}1)"
    echo "wget output:"
-   # shellcheck disable=SC2001
    echo "$WGETOUT"|sed 's/^/\t/g'
    exit 2
 fi
 
-if ! WGETOUT=$(wget -N -O "$SIGNATUREFILENAME.2" "$HOST2$BASEDIR$SIGNATUREFILENAME" 2>&1); then
-   echo "bitcoin.org failed to provide signature file, but bitcoincore.org did?"
+WGETOUT=$(wget -N -O "$SIGNATUREFILENAME.2" "$HOST2$BASEDIR$SIGNATUREFILENAME" 2>&1)
+if [ $? -ne 0 ]; then
+   echo "worldcoin.org failed to provide signature file, but worldcoincore.org did?"
    echo "wget output:"
-   # shellcheck disable=SC2001
    echo "$WGETOUT"|sed 's/^/\t/g'
    clean_up $SIGNATUREFILENAME
    exit 3
@@ -103,7 +105,7 @@ fi
 
 SIGFILEDIFFS="$(diff $SIGNATUREFILENAME $SIGNATUREFILENAME.2)"
 if [ "$SIGFILEDIFFS" != "" ]; then
-   echo "bitcoin.org and bitcoincore.org signature files were not equal?"
+   echo "worldcoin.org and worldcoincore.org signature files were not equal?"
    clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2
    exit 4
 fi
@@ -122,11 +124,10 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the Bitcoin Core binary release signing key installed?"
+      echo "gpg error. Do you have the Worldcoin Core binary release signing key installed?"
    fi
 
    echo "gpg output:"
-   # shellcheck disable=SC2001
    echo "$GPGOUT"|sed 's/^/\t/g'
    clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2 $TMPFILE
    exit "$RET"

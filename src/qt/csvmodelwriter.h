@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2014 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CSVMODELWRITER_H
-#define BITCOIN_QT_CSVMODELWRITER_H
+#ifndef WORLDCOIN_QT_CSVMODELWRITER_H
+#define WORLDCOIN_QT_CSVMODELWRITER_H
 
 #include <QList>
 #include <QObject>
@@ -20,7 +20,7 @@ class CSVModelWriter : public QObject
     Q_OBJECT
 
 public:
-    explicit CSVModelWriter(const QString &filename, QObject *parent = nullptr);
+    explicit CSVModelWriter(const QString &filename, QObject *parent = 0);
 
     void setModel(const QAbstractItemModel *model);
     void addColumn(const QString &title, int column, int role=Qt::EditRole);
@@ -43,4 +43,4 @@ private:
     QList<Column> columns;
 };
 
-#endif // BITCOIN_QT_CSVMODELWRITER_H
+#endif // WORLDCOIN_QT_CSVMODELWRITER_H

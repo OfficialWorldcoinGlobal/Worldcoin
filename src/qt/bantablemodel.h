@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_BANTABLEMODEL_H
-#define BITCOIN_QT_BANTABLEMODEL_H
+#ifndef WORLDCOIN_QT_BANTABLEMODEL_H
+#define WORLDCOIN_QT_BANTABLEMODEL_H
 
 #include <net.h>
 
@@ -12,6 +12,7 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
+class ClientModel;
 class BanTablePriv;
 
 namespace interfaces {
@@ -44,7 +45,7 @@ class BanTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit BanTableModel(interfaces::Node& node, QObject* parent);
+    explicit BanTableModel(interfaces::Node& node, ClientModel *parent = 0);
     ~BanTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
@@ -71,8 +72,9 @@ public Q_SLOTS:
 
 private:
     interfaces::Node& m_node;
+    ClientModel *clientModel;
     QStringList columns;
     std::unique_ptr<BanTablePriv> priv;
 };
 
-#endif // BITCOIN_QT_BANTABLEMODEL_H
+#endif // WORLDCOIN_QT_BANTABLEMODEL_H

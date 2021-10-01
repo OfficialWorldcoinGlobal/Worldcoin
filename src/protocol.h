@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,14 +7,15 @@
 #error This header can only be compiled as C++.
 #endif
 
-#ifndef BITCOIN_PROTOCOL_H
-#define BITCOIN_PROTOCOL_H
+#ifndef WORLDCOIN_PROTOCOL_H
+#define WORLDCOIN_PROTOCOL_H
 
 #include <netaddress.h>
 #include <serialize.h>
 #include <uint256.h>
 #include <version.h>
 
+#include <atomic>
 #include <stdint.h>
 #include <string>
 
@@ -37,10 +38,6 @@ public:
     typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
     explicit CMessageHeader(const MessageStartChars& pchMessageStartIn);
-
-    /** Construct a P2P message header from message-start characters, a command and the size of the message.
-     * @note Passing in a `pszCommand` longer than COMMAND_SIZE will result in a run-time assertion error.
-     */
     CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn);
 
     std::string GetCommand() const;
@@ -64,7 +61,7 @@ public:
 };
 
 /**
- * Bitcoin protocol message types. When adding new message types, don't forget
+ * Worldcoin protocol message types. When adding new message types, don't forget
  * to update allNetMessageTypes in protocol.cpp.
  */
 namespace NetMsgType {
@@ -72,100 +69,100 @@ namespace NetMsgType {
 /**
  * The version message provides information about the transmitting node to the
  * receiving node at the beginning of a connection.
- * @see https://bitcoin.org/en/developer-reference#version
+ * @see https://worldcoin.org/en/developer-reference#version
  */
 extern const char *VERSION;
 /**
  * The verack message acknowledges a previously-received version message,
  * informing the connecting node that it can begin to send other messages.
- * @see https://bitcoin.org/en/developer-reference#verack
+ * @see https://worldcoin.org/en/developer-reference#verack
  */
 extern const char *VERACK;
 /**
  * The addr (IP address) message relays connection information for peers on the
  * network.
- * @see https://bitcoin.org/en/developer-reference#addr
+ * @see https://worldcoin.org/en/developer-reference#addr
  */
 extern const char *ADDR;
 /**
  * The inv message (inventory message) transmits one or more inventories of
  * objects known to the transmitting peer.
- * @see https://bitcoin.org/en/developer-reference#inv
+ * @see https://worldcoin.org/en/developer-reference#inv
  */
 extern const char *INV;
 /**
  * The getdata message requests one or more data objects from another node.
- * @see https://bitcoin.org/en/developer-reference#getdata
+ * @see https://worldcoin.org/en/developer-reference#getdata
  */
 extern const char *GETDATA;
 /**
  * The merkleblock message is a reply to a getdata message which requested a
  * block using the inventory type MSG_MERKLEBLOCK.
  * @since protocol version 70001 as described by BIP37.
- * @see https://bitcoin.org/en/developer-reference#merkleblock
+ * @see https://worldcoin.org/en/developer-reference#merkleblock
  */
 extern const char *MERKLEBLOCK;
 /**
  * The getblocks message requests an inv message that provides block header
  * hashes starting from a particular point in the block chain.
- * @see https://bitcoin.org/en/developer-reference#getblocks
+ * @see https://worldcoin.org/en/developer-reference#getblocks
  */
 extern const char *GETBLOCKS;
 /**
  * The getheaders message requests a headers message that provides block
  * headers starting from a particular point in the block chain.
  * @since protocol version 31800.
- * @see https://bitcoin.org/en/developer-reference#getheaders
+ * @see https://worldcoin.org/en/developer-reference#getheaders
  */
 extern const char *GETHEADERS;
 /**
  * The tx message transmits a single transaction.
- * @see https://bitcoin.org/en/developer-reference#tx
+ * @see https://worldcoin.org/en/developer-reference#tx
  */
 extern const char *TX;
 /**
  * The headers message sends one or more block headers to a node which
  * previously requested certain headers with a getheaders message.
  * @since protocol version 31800.
- * @see https://bitcoin.org/en/developer-reference#headers
+ * @see https://worldcoin.org/en/developer-reference#headers
  */
 extern const char *HEADERS;
 /**
  * The block message transmits a single serialized block.
- * @see https://bitcoin.org/en/developer-reference#block
+ * @see https://worldcoin.org/en/developer-reference#block
  */
 extern const char *BLOCK;
 /**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
- * @see https://bitcoin.org/en/developer-reference#getaddr
+ * @see https://worldcoin.org/en/developer-reference#getaddr
  */
 extern const char *GETADDR;
 /**
  * The mempool message requests the TXIDs of transactions that the receiving
  * node has verified as valid but which have not yet appeared in a block.
  * @since protocol version 60002.
- * @see https://bitcoin.org/en/developer-reference#mempool
+ * @see https://worldcoin.org/en/developer-reference#mempool
  */
 extern const char *MEMPOOL;
 /**
  * The ping message is sent periodically to help confirm that the receiving
  * peer is still connected.
- * @see https://bitcoin.org/en/developer-reference#ping
+ * @see https://worldcoin.org/en/developer-reference#ping
  */
 extern const char *PING;
 /**
  * The pong message replies to a ping message, proving to the pinging node that
  * the ponging node is still alive.
  * @since protocol version 60001 as described by BIP31.
- * @see https://bitcoin.org/en/developer-reference#pong
+ * @see https://worldcoin.org/en/developer-reference#pong
  */
 extern const char *PONG;
 /**
  * The notfound message is a reply to a getdata message which requested an
  * object the receiving node does not have available for relay.
  * @since protocol version 70001.
- * @see https://bitcoin.org/en/developer-reference#notfound
+ * @see https://worldcoin.org/en/developer-reference#notfound
  */
 extern const char *NOTFOUND;
 /**
@@ -174,7 +171,7 @@ extern const char *NOTFOUND;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filterload
+ * @see https://worldcoin.org/en/developer-reference#filterload
  */
 extern const char *FILTERLOAD;
 /**
@@ -183,7 +180,7 @@ extern const char *FILTERLOAD;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filteradd
+ * @see https://worldcoin.org/en/developer-reference#filteradd
  */
 extern const char *FILTERADD;
 /**
@@ -192,14 +189,21 @@ extern const char *FILTERADD;
  * @since protocol version 70001 as described by BIP37.
  *   Only available with service bit NODE_BLOOM since protocol version
  *   70011 as described by BIP111.
- * @see https://bitcoin.org/en/developer-reference#filterclear
+ * @see https://worldcoin.org/en/developer-reference#filterclear
  */
 extern const char *FILTERCLEAR;
+/**
+ * The reject message informs the receiving node that one of its previous
+ * messages has been rejected.
+ * @since protocol version 70002 as described by BIP61.
+ * @see https://worldcoin.org/en/developer-reference#reject
+ */
+extern const char *REJECT;
 /**
  * Indicates that a node prefers to receive new block announcements via a
  * "headers" message rather than an "inv".
  * @since protocol version 70012 as described by BIP130.
- * @see https://bitcoin.org/en/developer-reference#sendheaders
+ * @see https://worldcoin.org/en/developer-reference#sendheaders
  */
 extern const char *SENDHEADERS;
 /**
@@ -241,23 +245,25 @@ const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {
-    // NOTE: When adding here, be sure to update qt/guiutil.cpp's formatServicesStr too
     // Nothing
     NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
-    // set by all Bitcoin Core non pruned nodes, and is unset by SPV clients or other light clients.
+    // set by all Worldcoin Core non pruned nodes, and is unset by SPV clients or other light clients.
     NODE_NETWORK = (1 << 0),
     // NODE_GETUTXO means the node is capable of responding to the getutxo protocol request.
-    // Bitcoin Core does not support this but a patch set called Bitcoin XT does.
+    // Worldcoin Core does not support this but a patch set called Worldcoin XT does.
     // See BIP 64 for details on how this is implemented.
     NODE_GETUTXO = (1 << 1),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.
-    // Bitcoin Core nodes used to support this by default, without advertising this bit,
+    // Worldcoin Core nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
     // NODE_WITNESS indicates that a node can be asked for blocks and transactions including
     // witness data.
     NODE_WITNESS = (1 << 3),
+    // NODE_XTHIN means the node supports Xtreme Thinblocks
+    // If this is turned off then the node will not service nor make xthin requests
+    NODE_XTHIN = (1 << 4),
     // NODE_NETWORK_LIMITED means the same as NODE_NETWORK with the limitation of only
     // serving the last 288 (2 day) blocks
     // See BIP159 for details on how this is implemented.
@@ -265,7 +271,7 @@ enum ServiceFlags : uint64_t {
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
-    // bitcoin-development mailing list. Remember that service bits are just
+    // worldcoin-development mailing list. Remember that service bits are just
     // unauthenticated advertisements, so your code must be robust against
     // collisions and other cases where nodes may be advertising a service they
     // do not actually support. Other service bits should be allocated via the
@@ -396,9 +402,10 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
+    // TODO: make private (improves encapsulation)
 public:
     int type;
     uint256 hash;
 };
 
-#endif // BITCOIN_PROTOCOL_H
+#endif // WORLDCOIN_PROTOCOL_H

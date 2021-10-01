@@ -1,13 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ADDRDB_H
-#define BITCOIN_ADDRDB_H
+#ifndef WORLDCOIN_ADDRDB_H
+#define WORLDCOIN_ADDRDB_H
 
 #include <fs.h>
-#include <net_types.h> // For banmap_t
 #include <serialize.h>
 
 #include <string>
@@ -17,6 +16,13 @@ class CSubNet;
 class CAddrMan;
 class CDataStream;
 
+typedef enum BanReason
+{
+    BanReasonUnknown          = 0,
+    BanReasonNodeMisbehaving  = 1,
+    BanReasonManuallyAdded    = 2
+} BanReason;
+
 class CBanEntry
 {
 public:
@@ -24,6 +30,7 @@ public:
     int nVersion;
     int64_t nCreateTime;
     int64_t nBanUntil;
+    uint8_t banReason;
 
     CBanEntry()
     {
@@ -36,10 +43,14 @@ public:
         nCreateTime = nCreateTimeIn;
     }
 
-    SERIALIZE_METHODS(CBanEntry, obj)
-    {
-        uint8_t ban_reason = 2; //! For backward compatibility
-        READWRITE(obj.nVersion, obj.nCreateTime, obj.nBanUntil, ban_reason);
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(this->nVersion);
+        READWRITE(nCreateTime);
+        READWRITE(nBanUntil);
+        READWRITE(banReason);
     }
 
     void SetNull()
@@ -47,8 +58,23 @@ public:
         nVersion = CBanEntry::CURRENT_VERSION;
         nCreateTime = 0;
         nBanUntil = 0;
+        banReason = BanReasonUnknown;
+    }
+
+    std::string banReasonToString() const
+    {
+        switch (banReason) {
+        case BanReasonNodeMisbehaving:
+            return "node misbehaving";
+        case BanReasonManuallyAdded:
+            return "manually added";
+        default:
+            return "unknown";
+        }
     }
 };
+
+typedef std::map<CSubNet, CBanEntry> banmap_t;
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
@@ -66,11 +92,11 @@ public:
 class CBanDB
 {
 private:
-    const fs::path m_ban_list_path;
+    fs::path pathBanlist;
 public:
-    explicit CBanDB(fs::path ban_list_path);
+    CBanDB();
     bool Write(const banmap_t& banSet);
     bool Read(banmap_t& banSet);
 };
 
-#endif // BITCOIN_ADDRDB_H
+#endif // WORLDCOIN_ADDRDB_H

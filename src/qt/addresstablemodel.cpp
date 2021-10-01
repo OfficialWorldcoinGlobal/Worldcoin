@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,10 +7,9 @@
 #include <qt/guiutil.h>
 #include <qt/walletmodel.h>
 
+#include <interfaces/node.h>
 #include <key_io.h>
 #include <wallet/wallet.h>
-
-#include <algorithm>
 
 #include <QFont>
 #include <QDebug>
@@ -55,7 +54,7 @@ struct AddressTableEntryLessThan
 static AddressTableEntry::Type translateTransactionType(const QString &strPurpose, bool isMine)
 {
     AddressTableEntry::Type addressType = AddressTableEntry::Hidden;
-    // "refund" addresses aren't shown, and change addresses aren't returned by getAddresses at all.
+    // "refund" addresses aren't shown, and change addresses aren't in mapAddressBook at all.
     if (strPurpose == "send")
         addressType = AddressTableEntry::Sending;
     else if (strPurpose == "receive")
@@ -72,7 +71,7 @@ public:
     QList<AddressTableEntry> cachedAddressTable;
     AddressTableModel *parent;
 
-    explicit AddressTablePriv(AddressTableModel *_parent):
+    AddressTablePriv(AddressTableModel *_parent):
         parent(_parent) {}
 
     void refreshAddressTable(interfaces::Wallet& wallet)
@@ -88,18 +87,18 @@ public:
                                   QString::fromStdString(EncodeDestination(address.dest))));
             }
         }
-        // std::lower_bound() and std::upper_bound() require our cachedAddressTable list to be sorted in asc order
+        // qLowerBound() and qUpperBound() require our cachedAddressTable list to be sorted in asc order
         // Even though the map is already sorted this re-sorting step is needed because the originating map
         // is sorted by binary address, not by base58() address.
-        std::sort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
+        qSort(cachedAddressTable.begin(), cachedAddressTable.end(), AddressTableEntryLessThan());
     }
 
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status)
     {
         // Find address / label in model
-        QList<AddressTableEntry>::iterator lower = std::lower_bound(
+        QList<AddressTableEntry>::iterator lower = qLowerBound(
             cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
-        QList<AddressTableEntry>::iterator upper = std::upper_bound(
+        QList<AddressTableEntry>::iterator upper = qUpperBound(
             cachedAddressTable.begin(), cachedAddressTable.end(), address, AddressTableEntryLessThan());
         int lowerIndex = (lower - cachedAddressTable.begin());
         int upperIndex = (upper - cachedAddressTable.begin());
@@ -154,7 +153,7 @@ public:
         }
         else
         {
-            return nullptr;
+            return 0;
         }
     }
 };
@@ -301,8 +300,8 @@ QVariant AddressTableModel::headerData(int section, Qt::Orientation orientation,
 
 Qt::ItemFlags AddressTableModel::flags(const QModelIndex &index) const
 {
-    if (!index.isValid()) return Qt::NoItemFlags;
-
+    if(!index.isValid())
+        return 0;
     AddressTableEntry *rec = static_cast<AddressTableEntry*>(index.internalPointer());
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
@@ -333,7 +332,7 @@ QModelIndex AddressTableModel::index(int row, int column, const QModelIndex &par
 void AddressTableModel::updateEntry(const QString &address,
         const QString &label, bool isMine, const QString &purpose, int status)
 {
-    // Update address book model from Bitcoin core
+    // Update address book model from Worldcoin core
     priv->updateEntry(address, label, isMine, purpose, status);
 }
 
@@ -360,15 +359,12 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 return QString();
             }
         }
-
-        // Add entry
-        walletModel->wallet().setAddressBook(DecodeDestination(strAddress), strLabel, "send");
     }
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        CTxDestination dest;
-        if(!walletModel->wallet().getNewDestination(address_type, strLabel, dest))
+        CPubKey newKey;
+        if(!walletModel->wallet().getKeyFromPool(false /* internal */, newKey))
         {
             WalletModel::UnlockContext ctx(walletModel->requestUnlock());
             if(!ctx.isValid())
@@ -377,18 +373,23 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
                 editStatus = WALLET_UNLOCK_FAILURE;
                 return QString();
             }
-            if(!walletModel->wallet().getNewDestination(address_type, strLabel, dest))
+            if(!walletModel->wallet().getKeyFromPool(false /* internal */, newKey))
             {
                 editStatus = KEY_GENERATION_FAILURE;
                 return QString();
             }
         }
-        strAddress = EncodeDestination(dest);
+        walletModel->wallet().learnRelatedScripts(newKey, address_type);
+        strAddress = EncodeDestination(GetDestinationForKey(newKey, address_type));
     }
     else
     {
         return QString();
     }
+
+    // Add entry
+    walletModel->wallet().setAddressBook(DecodeDestination(strAddress), strLabel,
+                           (type == Send ? "send" : "receive"));
     return QString::fromStdString(strAddress);
 }
 

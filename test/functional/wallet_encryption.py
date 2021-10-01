@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2019 The Bitcoin Core developers
+# Copyright (c) 2016-2018 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WorldcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -14,7 +14,7 @@ from test_framework.util import (
     assert_greater_than_or_equal,
 )
 
-class WalletEncryptionTest(BitcoinTestFramework):
+class WalletEncryptionTest(WorldcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -31,25 +31,20 @@ class WalletEncryptionTest(BitcoinTestFramework):
         privkey = self.nodes[0].dumpprivkey(address)
         assert_equal(privkey[:1], "c")
         assert_equal(len(privkey), 52)
-        assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrase was called", self.nodes[0].walletpassphrase, 'ff', 1)
-        assert_raises_rpc_error(-15, "Error: running with an unencrypted wallet, but walletpassphrasechange was called.", self.nodes[0].walletpassphrasechange, 'ff', 'ff')
 
         # Encrypt the wallet
-        assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].encryptwallet, '')
-        self.nodes[0].encryptwallet(passphrase)
+        self.nodes[0].node_encrypt_wallet(passphrase)
+        self.start_node(0)
 
         # Test that the wallet is encrypted
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
-        assert_raises_rpc_error(-15, "Error: running with an encrypted wallet, but encryptwallet was called.", self.nodes[0].encryptwallet, 'ff')
-        assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].walletpassphrase, '', 1)
-        assert_raises_rpc_error(-8, "passphrase can not be empty", self.nodes[0].walletpassphrasechange, '', 'ff')
 
         # Check that walletpassphrase works
         self.nodes[0].walletpassphrase(passphrase, 2)
         assert_equal(privkey, self.nodes[0].dumpprivkey(address))
 
         # Check that the timeout is right
-        time.sleep(3)
+        time.sleep(2)
         assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first", self.nodes[0].dumpprivkey, address)
 
         # Test wrong passphrase

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test bitcoind with different proxy configuration.
+"""Test worldcoind with different proxy configuration.
 
 Test plan:
-- Start bitcoind's with different proxy configurations
+- Start worldcoind's with different proxy configurations
 - Use addnode to initiate connections
 - Verify that proxies are connected to, and the right connection command is given
-- Proxy configurations to test on bitcoind side:
+- Proxy configurations to test on worldcoind side:
     - `-proxy` (proxy everything)
     - `-onion` (proxy just onions)
     - `-proxyrandomize` Circuit randomization
@@ -18,8 +18,8 @@ Test plan:
     - proxy on IPv6
 
 - Create various proxies (as threads)
-- Create bitcoinds that connect to them
-- Manipulate the bitcoinds using addnode (onetry) an observe effects
+- Create worldcoinds that connect to them
+- Manipulate the worldcoinds using addnode (onetry) an observe effects
 
 addnode connect to IPv4
 addnode connect to IPv6
@@ -31,7 +31,7 @@ import socket
 import os
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WorldcoinTestFramework
 from test_framework.util import (
     PORT_MIN,
     PORT_RANGE,
@@ -41,10 +41,9 @@ from test_framework.netutil import test_ipv6_local
 
 RANGE_BEGIN = PORT_MIN + 2 * PORT_RANGE  # Start after p2p and rpc ports
 
-class ProxyTest(BitcoinTestFramework):
+class ProxyTest(WorldcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.setup_clean_chain = True
 
     def setup_nodes(self):
         self.have_ipv6 = test_ipv6_local()
@@ -95,8 +94,8 @@ class ProxyTest(BitcoinTestFramework):
         # Test: outgoing IPv4 connection through node
         node.addnode("15.61.23.23:1234", "onetry")
         cmd = proxies[0].queue.get()
-        assert isinstance(cmd, Socks5Command)
-        # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+        assert(isinstance(cmd, Socks5Command))
+        # Note: worldcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
         assert_equal(cmd.addr, b"15.61.23.23")
         assert_equal(cmd.port, 1234)
@@ -109,8 +108,8 @@ class ProxyTest(BitcoinTestFramework):
             # Test: outgoing IPv6 connection through node
             node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
             cmd = proxies[1].queue.get()
-            assert isinstance(cmd, Socks5Command)
-            # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+            assert(isinstance(cmd, Socks5Command))
+            # Note: worldcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
             assert_equal(cmd.addr, b"1233:3432:2434:2343:3234:2345:6546:4534")
             assert_equal(cmd.port, 5443)
@@ -121,24 +120,24 @@ class ProxyTest(BitcoinTestFramework):
 
         if test_onion:
             # Test: outgoing onion connection through node
-            node.addnode("bitcoinostk4e4re.onion:8333", "onetry")
+            node.addnode("worldcoinostk4e4re.onion:11081", "onetry")
             cmd = proxies[2].queue.get()
-            assert isinstance(cmd, Socks5Command)
+            assert(isinstance(cmd, Socks5Command))
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
-            assert_equal(cmd.port, 8333)
+            assert_equal(cmd.addr, b"worldcoinostk4e4re.onion")
+            assert_equal(cmd.port, 11081)
             if not auth:
                 assert_equal(cmd.username, None)
                 assert_equal(cmd.password, None)
             rv.append(cmd)
 
         # Test: outgoing DNS name connection through node
-        node.addnode("node.noumenon:8333", "onetry")
+        node.addnode("node.noumenon:11081", "onetry")
         cmd = proxies[3].queue.get()
-        assert isinstance(cmd, Socks5Command)
+        assert(isinstance(cmd, Socks5Command))
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
         assert_equal(cmd.addr, b"node.noumenon")
-        assert_equal(cmd.port, 8333)
+        assert_equal(cmd.port, 11081)
         if not auth:
             assert_equal(cmd.username, None)
             assert_equal(cmd.password, None)
@@ -199,3 +198,4 @@ class ProxyTest(BitcoinTestFramework):
 
 if __name__ == '__main__':
     ProxyTest().main()
+

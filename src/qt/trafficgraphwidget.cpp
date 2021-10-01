@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,6 @@
 #include <qt/clientmodel.h>
 
 #include <QPainter>
-#include <QPainterPath>
 #include <QColor>
 #include <QTimer>
 
@@ -20,17 +19,17 @@
 
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
-    timer(nullptr),
+    timer(0),
     fMax(0.0f),
     nMins(0),
     vSamplesIn(),
     vSamplesOut(),
     nLastBytesIn(0),
     nLastBytesOut(0),
-    clientModel(nullptr)
+    clientModel(0)
 {
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &TrafficGraphWidget::updateRates);
+    connect(timer, SIGNAL(timeout()), SLOT(updateRates()));
 }
 
 void TrafficGraphWidget::setClientModel(ClientModel *model)
@@ -105,7 +104,6 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         }
     }
 
-    painter.setRenderHint(QPainter::Antialiasing);
     if(!vSamplesIn.empty()) {
         QPainterPath p;
         paintPath(p, vSamplesIn);
@@ -143,10 +141,10 @@ void TrafficGraphWidget::updateRates()
     }
 
     float tmax = 0.0f;
-    for (const float f : vSamplesIn) {
+    for (float f : vSamplesIn) {
         if(f > tmax) tmax = f;
     }
-    for (const float f : vSamplesOut) {
+    for (float f : vSamplesOut) {
         if(f > tmax) tmax = f;
     }
     fMax = tmax;

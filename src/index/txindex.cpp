@@ -1,12 +1,11 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <index/txindex.h>
 #include <shutdown.h>
 #include <ui_interface.h>
-#include <util/system.h>
-#include <util/translation.h>
+#include <util.h>
 #include <validation.h>
 
 #include <boost/thread.hpp>
@@ -17,7 +16,7 @@ constexpr char DB_TXINDEX_BLOCK = 'T';
 
 std::unique_ptr<TxIndex> g_txindex;
 
-struct CDiskTxPos : public FlatFilePos
+struct CDiskTxPos : public CDiskBlockPos
 {
     unsigned int nTxOffset; // after header
 
@@ -25,11 +24,11 @@ struct CDiskTxPos : public FlatFilePos
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEAS(FlatFilePos, *this);
+        READWRITEAS(CDiskBlockPos, *this);
         READWRITE(VARINT(nTxOffset));
     }
 
-    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    CDiskTxPos(const CDiskBlockPos &blockIn, unsigned int nTxOffsetIn) : CDiskBlockPos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
     }
 
     CDiskTxPos() {
@@ -37,7 +36,7 @@ struct CDiskTxPos : public FlatFilePos
     }
 
     void SetNull() {
-        FlatFilePos::SetNull();
+        CDiskBlockPos::SetNull();
         nTxOffset = 0;
     }
 };
@@ -138,7 +137,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
 
     int64_t count = 0;
     LogPrintf("Upgrading txindex database... [0%%]\n");
-    uiInterface.ShowProgress(_("Upgrading txindex database").translated, 0, true);
+    uiInterface.ShowProgress(_("Upgrading txindex database"), 0, true);
     int report_done = 0;
     const size_t batch_size = 1 << 24; // 16 MiB
 
@@ -175,7 +174,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
                 (static_cast<uint32_t>(*(txid.begin() + 1)) << 0);
             int percentage_done = (int)(high_nibble * 100.0 / 65536.0 + 0.5);
 
-            uiInterface.ShowProgress(_("Upgrading txindex database").translated, percentage_done, true);
+            uiInterface.ShowProgress(_("Upgrading txindex database"), percentage_done, true);
             if (report_done < percentage_done/10) {
                 LogPrintf("Upgrading txindex database... [%d%%]\n", percentage_done);
                 report_done = percentage_done/10;
@@ -237,7 +236,7 @@ bool TxIndex::Init()
     // Attempt to migrate txindex from the old database to the new one. Even if
     // chain_tip is null, the node could be reindexing and we still want to
     // delete txindex records in the old database.
-    if (!m_db->MigrateData(*pblocktree, ::ChainActive().GetLocator())) {
+    if (!m_db->MigrateData(*pblocktree, chainActive.GetLocator())) {
         return false;
     }
 
@@ -246,15 +245,12 @@ bool TxIndex::Init()
 
 bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
 {
-    // Exclude genesis block transaction because outputs are not spendable.
-    if (pindex->nHeight == 0) return true;
-
     CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
     std::vector<std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
     for (const auto& tx : block.vtx) {
         vPos.emplace_back(tx->GetHash(), pos);
-        pos.nTxOffset += ::GetSerializeSize(*tx, CLIENT_VERSION);
+        pos.nTxOffset += ::GetSerializeSize(*tx, SER_DISK, CLIENT_VERSION);
     }
     return m_db->WriteTxs(vPos);
 }

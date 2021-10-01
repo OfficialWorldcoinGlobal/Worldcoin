@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHECKQUEUE_H
-#define BITCOIN_CHECKQUEUE_H
+#ifndef WORLDCOIN_CHECKQUEUE_H
+#define WORLDCOIN_CHECKQUEUE_H
 
 #include <sync.h>
 
@@ -90,7 +90,8 @@ private:
                         nTotal--;
                         bool fRet = fAllOk;
                         // reset the status for new work later
-                        fAllOk = true;
+                        if (fMaster)
+                            fAllOk = true;
                         // return the current status
                         return fRet;
                     }
@@ -210,4 +211,4 @@ public:
     }
 };
 
-#endif // BITCOIN_CHECKQUEUE_H
+#endif // WORLDCOIN_CHECKQUEUE_H

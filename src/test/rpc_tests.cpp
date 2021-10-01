@@ -1,16 +1,15 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/server.h>
 #include <rpc/client.h>
-#include <rpc/util.h>
 
 #include <core_io.h>
-#include <interfaces/chain.h>
-#include <node/context.h>
-#include <test/util/setup_common.h>
-#include <util/time.h>
+#include <key_io.h>
+#include <netbase.h>
+
+#include <test/test_worldcoin.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -29,9 +28,10 @@ UniValue CallRPC(std::string args)
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
     request.fHelp = false;
-    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+    BOOST_CHECK(tableRPC[strMethod]);
+    rpcfn_type method = tableRPC[strMethod]->actor;
     try {
-        UniValue result = tableRPC.execute(request);
+        UniValue result = (*method)(request);
         return result;
     }
     catch (const UniValue& objError) {
@@ -108,10 +108,10 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
       "\"vout\":1,\"scriptPubKey\":\"a914b10c9df5f7edf436c697f02f1efdba4cf399615187\","
       "\"redeemScript\":\"512103debedc17b3df2badbcdd86d5feb4562b86fe182e5998abd8bcd4f122c6155b1b21027e940bb73ab8732bfdf7f9216ecefca5b94d6df834e77e108f68e66f126044c052ae\"}]";
     r = CallRPC(std::string("createrawtransaction ")+prevout+" "+
-      "{\"3HqAe9LtNBjnsfM4CyYaWTnvCaUYT7v4oZ\":11}");
+      "{\"A8aRNzQnSFcgn2iXd7CzkbRHu9raZFHSkT\":11}"); // 3HqAe9LtNBjnsfM4CyYaWTnvCaUYT7v4oZ\":11}");
     std::string notsigned = r.get_str();
-    std::string privkey1 = "\"KzsXybp9jX64P5ekX1KUxRQ79Jht9uzW7LorgwE65i5rWACL6LQe\"";
-    std::string privkey2 = "\"Kyhdf5LuKTRx4ge69ybABsiUAWjVRK4XGxAKk2FQLp2HjGMy87Z4\"";
+    std::string privkey1 = "\"QSGT8Sd8z8aBcc3o7HAGqeEicLjTCU8JzbVmUZcvp4hCx66fsLPE\"";
+    std::string privkey2 = "\"QR6Yov9ta4v5JD38kFRx56Z5dYm4TsCLACrEXeeF5AdeBCNKeB44\"";
     r = CallRPC(std::string("signrawtransactionwithkey ")+notsigned+" [] "+prevout);
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == false);
     r = CallRPC(std::string("signrawtransactionwithkey ")+notsigned+" ["+privkey1+","+privkey2+"] "+prevout);
@@ -121,6 +121,9 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
 BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
 {
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"data\":\"68656c6c6f776f726c64\"}"));
+
+    // Allow more than one data transaction output
+    BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"data\":\"68656c6c6f776f726c64\",\"data\":\"68656c6c6f776f726c64\"}"));
 
     // Key not "data" (bad address)
     BOOST_CHECK_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"somedata\":\"68656c6c6f776f726c64\"}"), std::runtime_error);
@@ -224,7 +227,7 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
     // Invalid, trailing garbage
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0sds"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("1.0]"), std::runtime_error);
-    // BTC addresses should fail parsing
+    // WDC addresses should fail parsing
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
 }

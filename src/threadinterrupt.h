@@ -1,15 +1,14 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2017 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_THREADINTERRUPT_H
-#define BITCOIN_THREADINTERRUPT_H
-
-#include <sync.h>
+#ifndef WORLDCOIN_THREADINTERRUPT_H
+#define WORLDCOIN_THREADINTERRUPT_H
 
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <mutex>
 
 /*
     A helper class for interruptible sleeps. Calling operator() will interrupt
@@ -29,8 +28,8 @@ public:
 
 private:
     std::condition_variable cond;
-    Mutex mut;
+    std::mutex mut;
     std::atomic<bool> flag;
 };
 
-#endif //BITCOIN_THREADINTERRUPT_H
+#endif //WORLDCOIN_THREADINTERRUPT_H

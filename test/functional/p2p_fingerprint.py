@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2018 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various fingerprinting protections.
@@ -19,16 +19,19 @@ from test_framework.mininode import (
     msg_getdata,
     msg_getheaders,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WorldcoinTestFramework
 from test_framework.util import (
     assert_equal,
     wait_until,
 )
 
-class P2PFingerprintTest(BitcoinTestFramework):
+class P2PFingerprintTest(WorldcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     # Build a chain of blocks on top of given one
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
@@ -80,7 +83,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(int(time.time()) - 60 * 24 * 60 * 60)
 
         # Generating a chain of 10 blocks
-        block_hashes = self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
+        block_hashes = self.nodes[0].generate(nblocks=10)
 
         # Create longer chain starting 2 blocks before current tip
         height = len(block_hashes) - 2
@@ -111,7 +114,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
 
         # Longest chain is extended so stale is much older than chain tip
         self.nodes[0].setmocktime(0)
-        tip = self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)[0]
+        tip = self.nodes[0].generate(nblocks=1)[0]
         assert_equal(self.nodes[0].getblockcount(), 14)
 
         # Send getdata & getheaders to refresh last received getheader message
