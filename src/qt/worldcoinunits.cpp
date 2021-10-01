@@ -64,10 +64,10 @@ QString WorldcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case WDC: return QString("Worldcoins");
-    case mWDC: return QString("miliWorldcoins (1 / 1" THIN_SP_UTF8 "000)");
-    case uWDC: return QString("microWorldcoins (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case SAT: return QString("satoWorldcoins (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case WDC: return QString("WDC");
+    case mWDC: return QString("mWDC (1 / 1" THIN_SP_UTF8 "000)");
+    case uWDC: return QString("uWDC (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SAT: return QString("SAT (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
