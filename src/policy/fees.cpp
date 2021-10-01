@@ -1,14 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees.h>
+#include <policy/policy.h>
 
 #include <clientversion.h>
+#include <primitives/transaction.h>
 #include <streams.h>
 #include <txmempool.h>
-#include <util/system.h>
+#include <util.h>
 
 static constexpr double INF_FEERATE = 1e99;
 
@@ -23,6 +25,40 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
     if (horizon_string == horizon_strings.end()) return "unknown";
 
     return horizon_string->second;
+}
+
+std::string StringForFeeReason(FeeReason reason) {
+    static const std::map<FeeReason, std::string> fee_reason_strings = {
+        {FeeReason::NONE, "None"},
+        {FeeReason::HALF_ESTIMATE, "Half Target 60% Threshold"},
+        {FeeReason::FULL_ESTIMATE, "Target 85% Threshold"},
+        {FeeReason::DOUBLE_ESTIMATE, "Double Target 95% Threshold"},
+        {FeeReason::CONSERVATIVE, "Conservative Double Target longer horizon"},
+        {FeeReason::MEMPOOL_MIN, "Mempool Min Fee"},
+        {FeeReason::PAYTXFEE, "PayTxFee set"},
+        {FeeReason::FALLBACK, "Fallback fee"},
+        {FeeReason::REQUIRED, "Minimum Required Fee"},
+        {FeeReason::MAXTXFEE, "MaxTxFee limit"}
+    };
+    auto reason_string = fee_reason_strings.find(reason);
+
+    if (reason_string == fee_reason_strings.end()) return "Unknown";
+
+    return reason_string->second;
+}
+
+bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode) {
+    static const std::map<std::string, FeeEstimateMode> fee_modes = {
+        {"UNSET", FeeEstimateMode::UNSET},
+        {"ECONOMICAL", FeeEstimateMode::ECONOMICAL},
+        {"CONSERVATIVE", FeeEstimateMode::CONSERVATIVE},
+    };
+    auto mode = fee_modes.find(mode_string);
+
+    if (mode == fee_modes.end()) return false;
+
+    fee_estimate_mode = mode->second;
+    return true;
 }
 
 /**
@@ -46,7 +82,7 @@ private:
     std::vector<double> txCtAvg;
 
     // Count the total # of txs confirmed within Y blocks in each bucket
-    // Track the historical moving average of these totals over blocks
+    // Track the historical moving average of theses totals over blocks
     std::vector<std::vector<double>> confAvg; // confAvg[Y][X]
 
     // Track moving avg of txs which have been evicted from the mempool
@@ -475,7 +511,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 // of no harm to try to remove them again.
 bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
 {
-    LOCK(m_cs_fee_estimator);
+    LOCK(cs_feeEstimator);
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
         feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
@@ -512,19 +548,19 @@ CBlockPolicyEstimator::~CBlockPolicyEstimator()
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
 {
-    LOCK(m_cs_fee_estimator);
+    LOCK(cs_feeEstimator);
     unsigned int txHeight = entry.GetHeight();
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs.count(hash)) {
         LogPrint(BCLog::ESTIMATEFEE, "Blockpolicy error mempool tx %s already being tracked\n",
-                 hash.ToString());
+                 hash.ToString().c_str());
         return;
     }
 
     if (txHeight != nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random they don't
         // affect the estimate.  We'll potentially double count transactions in 1-block reorgs.
-        // Ignore txs if BlockPolicyEstimator is not in sync with ::ChainActive().Tip().
+        // Ignore txs if BlockPolicyEstimator is not in sync with chainActive.Tip().
         // It will be synced next time a block is processed.
         return;
     }
@@ -537,7 +573,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     }
     trackedTxs++;
 
-    // Feerates are stored and reported as BTC-per-kb:
+    // Feerates are stored and reported as WDC-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
@@ -567,7 +603,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         return false;
     }
 
-    // Feerates are stored and reported as BTC-per-kb:
+    // Feerates are stored and reported as WDC-per-kb:
     CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
 
     feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
@@ -579,7 +615,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
                                          std::vector<const CTxMemPoolEntry*>& entries)
 {
-    LOCK(m_cs_fee_estimator);
+    LOCK(cs_feeEstimator);
     if (nBlockHeight <= nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random
         // they don't affect the estimate.
@@ -657,7 +693,7 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
     }
     }
 
-    LOCK(m_cs_fee_estimator);
+    LOCK(cs_feeEstimator);
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > stats->GetMaxConfirms())
         return CFeeRate(0);
@@ -674,7 +710,6 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
 
 unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon horizon) const
 {
-    LOCK(m_cs_fee_estimator);
     switch (horizon) {
     case FeeEstimateHorizon::SHORT_HALFLIFE: {
         return shortStats->GetMaxConfirms();
@@ -784,7 +819,7 @@ double CBlockPolicyEstimator::estimateConservativeFee(unsigned int doubleTarget,
  */
 CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const
 {
-    LOCK(m_cs_fee_estimator);
+    LOCK(cs_feeEstimator);
 
     if (feeCalc) {
         feeCalc->desiredTarget = confTarget;
@@ -864,7 +899,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
 bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
     try {
-        LOCK(m_cs_fee_estimator);
+        LOCK(cs_feeEstimator);
         fileout << 149900; // version required to read: 0.14.99 or later
         fileout << CLIENT_VERSION; // version that wrote the file
         fileout << nBestSeenHeight;
@@ -889,7 +924,7 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 bool CBlockPolicyEstimator::Read(CAutoFile& filein)
 {
     try {
-        LOCK(m_cs_fee_estimator);
+        LOCK(cs_feeEstimator);
         int nVersionRequired, nVersionThatWrote;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
@@ -948,7 +983,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
 
 void CBlockPolicyEstimator::FlushUnconfirmed() {
     int64_t startclear = GetTimeMicros();
-    LOCK(m_cs_fee_estimator);
+    LOCK(cs_feeEstimator);
     size_t num_entries = mapMemPoolTxs.size();
     // Remove every entry in mapMemPoolTxs
     while (!mapMemPoolTxs.empty()) {

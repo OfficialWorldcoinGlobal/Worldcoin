@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BLOOM_H
-#define BITCOIN_BLOOM_H
+#ifndef WORLDCOIN_BLOOM_H
+#define WORLDCOIN_BLOOM_H
 
 #include <serialize.h>
 
@@ -52,6 +52,10 @@ private:
     unsigned char nFlags;
 
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
+
+    // Private constructor for CRollingBloomFilter, no restrictions on size
+    CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak);
+    friend class CRollingBloomFilter;
 
 public:
     /**
@@ -115,6 +119,9 @@ public:
 class CRollingBloomFilter
 {
 public:
+    // A random bloom filter calls GetRand() at creation time.
+    // Don't create global CRollingBloomFilter objects, as they may be
+    // constructed before the randomizer is properly initialized.
     CRollingBloomFilter(const unsigned int nElements, const double nFPRate);
 
     void insert(const std::vector<unsigned char>& vKey);
@@ -133,4 +140,4 @@ private:
     int nHashFuncs;
 };
 
-#endif // BITCOIN_BLOOM_H
+#endif // WORLDCOIN_BLOOM_H

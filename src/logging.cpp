@@ -1,18 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
-#include <util/threadnames.h>
-#include <util/time.h>
-
-#include <mutex>
+#include <utiltime.h>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
 
-BCLog::Logger& LogInstance()
-{
 /**
  * NOTE: the logger instances is leaked on exit. This is ugly, but will be
  * cleaned up by the OS/libc. Defining a logger as a global object doesn't work
@@ -22,15 +17,11 @@ BCLog::Logger& LogInstance()
  * access the logger. When the shutdown sequence is fully audited and tested,
  * explicit destruction of these objects can be implemented by changing this
  * from a raw pointer to a std::unique_ptr.
- * Since the destructor is never called, the logger and all its members must
- * have a trivial destructor.
  *
  * This method of initialization was originally introduced in
  * ee3374234c60aba2cc4c5cd5cac1c0aefc2d817c.
  */
-    static BCLog::Logger* g_logger{new BCLog::Logger()};
-    return *g_logger;
-}
+BCLog::Logger* const g_logger = new BCLog::Logger();
 
 bool fLogIPs = DEFAULT_LOGIPS;
 
@@ -39,52 +30,26 @@ static int FileWriteStr(const std::string &str, FILE *fp)
     return fwrite(str.data(), 1, str.size(), fp);
 }
 
-bool BCLog::Logger::StartLogging()
+bool BCLog::Logger::OpenDebugLog()
 {
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
+    std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
 
-    assert(m_buffering);
     assert(m_fileout == nullptr);
+    assert(!m_file_path.empty());
 
-    if (m_print_to_file) {
-        assert(!m_file_path.empty());
-        m_fileout = fsbridge::fopen(m_file_path, "a");
-        if (!m_fileout) {
-            return false;
-        }
-
-        setbuf(m_fileout, nullptr); // unbuffered
-
-        // Add newlines to the logfile to distinguish this execution from the
-        // last one.
-        FileWriteStr("\n\n\n\n\n", m_fileout);
+    m_fileout = fsbridge::fopen(m_file_path, "a");
+    if (!m_fileout) {
+        return false;
     }
 
+    setbuf(m_fileout, nullptr); // unbuffered
     // dump buffered messages from before we opened the log
-    m_buffering = false;
     while (!m_msgs_before_open.empty()) {
-        const std::string& s = m_msgs_before_open.front();
-
-        if (m_print_to_file) FileWriteStr(s, m_fileout);
-        if (m_print_to_console) fwrite(s.data(), 1, s.size(), stdout);
-        for (const auto& cb : m_print_callbacks) {
-            cb(s);
-        }
-
+        FileWriteStr(m_msgs_before_open.front(), m_fileout);
         m_msgs_before_open.pop_front();
     }
-    if (m_print_to_console) fflush(stdout);
 
     return true;
-}
-
-void BCLog::Logger::DisconnectTestLogger()
-{
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
-    m_buffering = true;
-    if (m_fileout != nullptr) fclose(m_fileout);
-    m_fileout = nullptr;
-    m_print_callbacks.clear();
 }
 
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
@@ -95,15 +60,7 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::EnableCategory(const std::string& str)
 {
     BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) {
-        if (str == "db") {
-            // DEPRECATION: Added in 0.20, should start returning an error in 0.21
-            LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
-            EnableCategory(BCLog::WALLETDB);
-            return true;
-        }
-        return false;
-    }
+    if (!GetLogCategory(flag, str)) return false;
     EnableCategory(flag);
     return true;
 }
@@ -147,7 +104,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::HTTP, "http"},
     {BCLog::BENCH, "bench"},
     {BCLog::ZMQ, "zmq"},
-    {BCLog::WALLETDB, "walletdb"},
+    {BCLog::DB, "db"},
     {BCLog::RPC, "rpc"},
     {BCLog::ESTIMATEFEE, "estimatefee"},
     {BCLog::ADDRMAN, "addrman"},
@@ -162,7 +119,6 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::COINDB, "coindb"},
     {BCLog::QT, "qt"},
     {BCLog::LEVELDB, "leveldb"},
-    {BCLog::VALIDATION, "validation"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
@@ -212,7 +168,7 @@ std::vector<CLogCategoryActive> ListActiveLogCategories()
     return ret;
 }
 
-std::string BCLog::Logger::LogTimestampStr(const std::string& str)
+std::string BCLog::Logger::LogTimestampStr(const std::string &str)
 {
     std::string strStamped;
 
@@ -234,72 +190,44 @@ std::string BCLog::Logger::LogTimestampStr(const std::string& str)
     } else
         strStamped = str;
 
+    if (!str.empty() && str[str.size()-1] == '\n')
+        m_started_new_line = true;
+    else
+        m_started_new_line = false;
+
     return strStamped;
 }
 
-namespace BCLog {
-    /** Belts and suspenders: make sure outgoing log messages don't contain
-     * potentially suspicious characters, such as terminal control codes.
-     *
-     * This escapes control characters except newline ('\n') in C syntax.
-     * It escapes instead of removes them to still allow for troubleshooting
-     * issues where they accidentally end up in strings.
-     */
-    std::string LogEscapeMessage(const std::string& str) {
-        std::string ret;
-        for (char ch_in : str) {
-            uint8_t ch = (uint8_t)ch_in;
-            if ((ch >= 32 || ch == '\n') && ch != '\x7f') {
-                ret += ch_in;
-            } else {
-                ret += strprintf("\\x%02x", ch);
-            }
-        }
-        return ret;
-    }
-}
-
-void BCLog::Logger::LogPrintStr(const std::string& str)
+void BCLog::Logger::LogPrintStr(const std::string &str)
 {
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
-    std::string str_prefixed = LogEscapeMessage(str);
-
-    if (m_log_threadnames && m_started_new_line) {
-        str_prefixed.insert(0, "[" + util::ThreadGetInternalName() + "] ");
-    }
-
-    str_prefixed = LogTimestampStr(str_prefixed);
-
-    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
-
-    if (m_buffering) {
-        // buffer if we haven't started logging yet
-        m_msgs_before_open.push_back(str_prefixed);
-        return;
-    }
+    std::string strTimestamped = LogTimestampStr(str);
 
     if (m_print_to_console) {
         // print to console
-        fwrite(str_prefixed.data(), 1, str_prefixed.size(), stdout);
+        fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
         fflush(stdout);
     }
-    for (const auto& cb : m_print_callbacks) {
-        cb(str_prefixed);
-    }
     if (m_print_to_file) {
-        assert(m_fileout != nullptr);
+        std::lock_guard<std::mutex> scoped_lock(m_file_mutex);
 
-        // reopen the log file, if requested
-        if (m_reopen_file) {
-            m_reopen_file = false;
-            FILE* new_fileout = fsbridge::fopen(m_file_path, "a");
-            if (new_fileout) {
-                setbuf(new_fileout, nullptr); // unbuffered
-                fclose(m_fileout);
-                m_fileout = new_fileout;
-            }
+        // buffer if we haven't opened the log yet
+        if (m_fileout == nullptr) {
+            m_msgs_before_open.push_back(strTimestamped);
         }
-        FileWriteStr(str_prefixed, m_fileout);
+        else
+        {
+            // reopen the log file, if requested
+            if (m_reopen_file) {
+                m_reopen_file = false;
+                m_fileout = fsbridge::freopen(m_file_path, "a", m_fileout);
+                if (!m_fileout) {
+                    return;
+                }
+                setbuf(m_fileout, nullptr); // unbuffered
+            }
+
+            FileWriteStr(strTimestamped, m_fileout);
+        }
     }
 }
 
@@ -317,7 +245,7 @@ void BCLog::Logger::ShrinkDebugFile()
     size_t log_size = 0;
     try {
         log_size = fs::file_size(m_file_path);
-    } catch (const fs::filesystem_error&) {}
+    } catch (boost::filesystem::filesystem_error &) {}
 
     // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
     // trim it down by saving only the last RECENT_DEBUG_HISTORY_SIZE bytes

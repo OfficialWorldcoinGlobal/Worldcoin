@@ -1,31 +1,25 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPRESSOR_H
-#define BITCOIN_COMPRESSOR_H
+#ifndef WORLDCOIN_COMPRESSOR_H
+#define WORLDCOIN_COMPRESSOR_H
 
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <span.h>
 
+class CKeyID;
+class CPubKey;
+class CScriptID;
+
 bool CompressScript(const CScript& script, std::vector<unsigned char> &out);
 unsigned int GetSpecialScriptSize(unsigned int nSize);
 bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &out);
 
-/**
- * Compress amount.
- *
- * nAmount is of type uint64_t and thus cannot be negative. If you're passing in
- * a CAmount (int64_t), make sure to properly handle the case where the amount
- * is negative before calling CompressAmount(...).
- *
- * @pre Function defined only for 0 <= nAmount <= MAX_MONEY.
- */
 uint64_t CompressAmount(uint64_t nAmount);
-
 uint64_t DecompressAmount(uint64_t nAmount);
 
 /** Compact serializer for scripts.
@@ -39,8 +33,9 @@ uint64_t DecompressAmount(uint64_t nAmount);
  *  Other scripts up to 121 bytes require 1 byte + script length. Above
  *  that, scripts up to 16505 bytes require 2 bytes + script length.
  */
-struct ScriptCompression
+class CScriptCompressor
 {
+private:
     /**
      * make this static for now (there are only 6 special scripts defined)
      * this can potentially be extended together with a new nVersion for
@@ -49,8 +44,12 @@ struct ScriptCompression
      */
     static const unsigned int nSpecialScripts = 6;
 
+    CScript &script;
+public:
+    explicit CScriptCompressor(CScript &scriptIn) : script(scriptIn) { }
+
     template<typename Stream>
-    void Ser(Stream &s, const CScript& script) {
+    void Serialize(Stream &s) const {
         std::vector<unsigned char> compr;
         if (CompressScript(script, compr)) {
             s << MakeSpan(compr);
@@ -62,7 +61,7 @@ struct ScriptCompression
     }
 
     template<typename Stream>
-    void Unser(Stream &s, CScript& script) {
+    void Unserialize(Stream &s) {
         unsigned int nSize = 0;
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
@@ -83,24 +82,30 @@ struct ScriptCompression
     }
 };
 
-struct AmountCompression
-{
-    template<typename Stream, typename I> void Ser(Stream& s, I val)
-    {
-        s << VARINT(CompressAmount(val));
-    }
-    template<typename Stream, typename I> void Unser(Stream& s, I& val)
-    {
-        uint64_t v;
-        s >> VARINT(v);
-        val = DecompressAmount(v);
-    }
-};
-
 /** wrapper for CTxOut that provides a more compact serialization */
-struct TxOutCompression
+class CTxOutCompressor
 {
-    FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey)); }
+private:
+    CTxOut &txout;
+
+public:
+    explicit CTxOutCompressor(CTxOut &txoutIn) : txout(txoutIn) { }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        if (!ser_action.ForRead()) {
+            uint64_t nVal = CompressAmount(txout.nValue);
+            READWRITE(VARINT(nVal));
+        } else {
+            uint64_t nVal = 0;
+            READWRITE(VARINT(nVal));
+            txout.nValue = DecompressAmount(nVal);
+        }
+        CScriptCompressor cscript(REF(txout.scriptPubKey));
+        READWRITE(cscript);
+    }
 };
 
-#endif // BITCOIN_COMPRESSOR_H
+#endif // WORLDCOIN_COMPRESSOR_H

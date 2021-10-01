@@ -1,16 +1,16 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_COINSELECTION_H
-#define BITCOIN_WALLET_COINSELECTION_H
+#ifndef WORLDCOIN_WALLET_COINSELECTION_H
+#define WORLDCOIN_WALLET_COINSELECTION_H
 
 #include <amount.h>
 #include <primitives/transaction.h>
 #include <random.h>
 
 //! target minimum change amount
-static constexpr CAmount MIN_CHANGE{COIN / 100};
+static const CAmount MIN_CHANGE = CENT;
 //! final minimum change amount after paying for fees
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 
@@ -98,4 +98,4 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 
-#endif // BITCOIN_WALLET_COINSELECTION_H
+#endif // WORLDCOIN_WALLET_COINSELECTION_H

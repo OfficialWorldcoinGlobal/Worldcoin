@@ -49,27 +49,9 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
-    <message>
-        <source>Warning</source>
-        <translation>သတိပေးချက်</translation>
-    </message>
-    <message>
-        <source>Information</source>
-        <translation>အချက်အလက်</translation>
-    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
-    </context>
-<context>
-    <name>CreateWalletActivity</name>
-    </context>
-<context>
-    <name>CreateWalletDialog</name>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -82,10 +64,6 @@
     </context>
 <context>
     <name>Intro</name>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -94,14 +72,7 @@
     <name>OpenURIDialog</name>
     </context>
 <context>
-    <name>OpenWalletActivity</name>
-    </context>
-<context>
     <name>OptionsDialog</name>
-    <message>
-        <source>Error</source>
-        <translation>အမှား</translation>
-    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -114,6 +85,9 @@
     </context>
 <context>
     <name>QObject</name>
+    </context>
+<context>
+    <name>QObject::QObject</name>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -137,10 +111,16 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    </context>
+<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
+    </context>
+<context>
+    <name>SplashScreen</name>
     </context>
 <context>
     <name>TrafficGraphWidget</name>

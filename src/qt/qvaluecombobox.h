@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_QVALUECOMBOBOX_H
-#define BITCOIN_QT_QVALUECOMBOBOX_H
+#ifndef WORLDCOIN_QT_QVALUECOMBOBOX_H
+#define WORLDCOIN_QT_QVALUECOMBOBOX_H
 
 #include <QComboBox>
 #include <QVariant>
@@ -16,7 +16,7 @@ class QValueComboBox : public QComboBox
     Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged USER true)
 
 public:
-    explicit QValueComboBox(QWidget *parent = nullptr);
+    explicit QValueComboBox(QWidget *parent = 0);
 
     QVariant value() const;
     void setValue(const QVariant &value);
@@ -34,4 +34,4 @@ private Q_SLOTS:
     void handleSelectionChanged(int idx);
 };
 
-#endif // BITCOIN_QT_QVALUECOMBOBOX_H
+#endif // WORLDCOIN_QT_QVALUECOMBOBOX_H

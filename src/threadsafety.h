@@ -1,16 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_THREADSAFETY_H
-#define BITCOIN_THREADSAFETY_H
+#ifndef WORLDCOIN_THREADSAFETY_H
+#define WORLDCOIN_THREADSAFETY_H
 
 #ifdef __clang__
 // TL;DR Add GUARDED_BY(mutex) to member variables. The others are
 // rarely necessary. Ex: int nFoo GUARDED_BY(cs_foo);
 //
-// See https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
+// See http://clang.llvm.org/docs/LanguageExtensions.html#threadsafety
 // for documentation.  The clang compiler can do advanced static analysis
 // of locking when given the -Wthread-safety option.
 #define LOCKABLE __attribute__((lockable))
@@ -54,4 +54,4 @@
 #define ASSERT_EXCLUSIVE_LOCK(...)
 #endif // __GNUC__
 
-#endif // BITCOIN_THREADSAFETY_H
+#endif // WORLDCOIN_THREADSAFETY_H

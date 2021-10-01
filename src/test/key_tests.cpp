@@ -1,31 +1,31 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key.h>
 
 #include <key_io.h>
+#include <script/script.h>
 #include <uint256.h>
-#include <util/system.h>
-#include <util/strencodings.h>
-#include <util/string.h>
-#include <test/util/setup_common.h>
+#include <util.h>
+#include <utilstrencodings.h>
+#include <test/test_worldcoin.h>
 
 #include <string>
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
 
-static const std::string strSecret1 = "5HxWvvfubhXpYYpS3tJkw6fq9jE9j18THftkZjHHfmFiWtmAbrj";
-static const std::string strSecret2 = "5KC4ejrDjv152FGwP386VD1i2NYc5KkfSMyv1nGy1VGDxGHqVY3";
-static const std::string strSecret1C = "Kwr371tjA9u2rFSMZjTNun2PXXP3WPZu2afRHTcta6KxEUdm1vEw";
-static const std::string strSecret2C = "L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g";
-static const std::string addr1 = "1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ";
-static const std::string addr2 = "1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ";
-static const std::string addr1C = "1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs";
-static const std::string addr2C = "1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs";
+static const std::string strSecret1 = "6JFPe8b4jbpup7petSB98M8tcaqXCigji8fGrC8bEbbDQxQkQ68";
+static const std::string strSecret2 = "6KLE6U3w8x3rM7nA1ZQxR4KnyEzeirPEt4YaXWdY4roF7Tt96rq";
+static const std::string strSecret1C = "QP8WvtVMV2iU6y7LE27ksRspp4MAJizPWYovx88W71g1nfSdAhkV";
+static const std::string strSecret2C = "QTuro8Pwx5yaonvJmU4jbBfwuEmTViyAGNeNyfnG82o7HWJmnrLj";
+static const std::string addr1 = "DSpgzjPyfQB6ZzeSbMWpaZiTTxGf2oBCs4";
+static const std::string addr2 = "DR9VqfbWgEHZhNst34KQnABQXpPWXeLAJD";
+static const std::string addr1C = "D8jZ6R8uuyQwiybupiVs3eDCedKdZ5bYV3";
+static const std::string addr2C = "DP7rGcDbpAvMb1dKup981zNt1heWUuVLP7";
 
-static const std::string strAddressBad = "1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF";
+static const std::string strAddressBad = "DRjyUS2uuieEPkhZNdQz8hE5YycxVEqSXA";
 
 
 BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
@@ -68,10 +68,10 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(!key2C.VerifyPubKey(pubkey2));
     BOOST_CHECK(key2C.VerifyPubKey(pubkey2C));
 
-    BOOST_CHECK(DecodeDestination(addr1)  == CTxDestination(PKHash(pubkey1)));
-    BOOST_CHECK(DecodeDestination(addr2)  == CTxDestination(PKHash(pubkey2)));
-    BOOST_CHECK(DecodeDestination(addr1C) == CTxDestination(PKHash(pubkey1C)));
-    BOOST_CHECK(DecodeDestination(addr2C) == CTxDestination(PKHash(pubkey2C)));
+    BOOST_CHECK(DecodeDestination(addr1)  == CTxDestination(pubkey1.GetID()));
+    BOOST_CHECK(DecodeDestination(addr2)  == CTxDestination(pubkey2.GetID()));
+    BOOST_CHECK(DecodeDestination(addr1C) == CTxDestination(pubkey1C.GetID()));
+    BOOST_CHECK(DecodeDestination(addr2C) == CTxDestination(pubkey2C.GetID()));
 
     for (int n=0; n<16; n++)
     {
@@ -137,19 +137,19 @@ BOOST_AUTO_TEST_CASE(key_test1)
     BOOST_CHECK(key1.Sign(hashMsg, detsig));
     BOOST_CHECK(key1C.Sign(hashMsg, detsigc));
     BOOST_CHECK(detsig == detsigc);
-    BOOST_CHECK(detsig == ParseHex("304402205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d022014ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(detsig == ParseHex("3044022030475ecf08b2c234a0f1ecfdb65871e4e6a419a995e667ce8bc2c331b916c2df02200b6dffef4a9fb2528a7f65f6e780583ba874618d4a141415dfb65f2f4bb833be"));
     BOOST_CHECK(key2.Sign(hashMsg, detsig));
     BOOST_CHECK(key2C.Sign(hashMsg, detsigc));
     BOOST_CHECK(detsig == detsigc);
-    BOOST_CHECK(detsig == ParseHex("3044022052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd5022061d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+    BOOST_CHECK(detsig == ParseHex("3045022100af874275fc12e344969ed4ec89cd1f4974ec816d63391f0e002d3fb81a22c25e022000edcf093fdf460f45d9a3ca918d321a21539dac276f8d81a64818c62e8e9517"));
     BOOST_CHECK(key1.SignCompact(hashMsg, detsig));
     BOOST_CHECK(key1C.SignCompact(hashMsg, detsigc));
-    BOOST_CHECK(detsig == ParseHex("1c5dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
-    BOOST_CHECK(detsigc == ParseHex("205dbbddda71772d95ce91cd2d14b592cfbc1dd0aabd6a394b6c2d377bbe59d31d14ddda21494a4e221f0824f0b8b924c43fa43c0ad57dccdaa11f81a6bd4582f6"));
+    BOOST_CHECK(detsig == ParseHex("1c30475ecf08b2c234a0f1ecfdb65871e4e6a419a995e667ce8bc2c331b916c2df0b6dffef4a9fb2528a7f65f6e780583ba874618d4a141415dfb65f2f4bb833be"));
+    BOOST_CHECK(detsigc == ParseHex("2030475ecf08b2c234a0f1ecfdb65871e4e6a419a995e667ce8bc2c331b916c2df0b6dffef4a9fb2528a7f65f6e780583ba874618d4a141415dfb65f2f4bb833be"));
     BOOST_CHECK(key2.SignCompact(hashMsg, detsig));
     BOOST_CHECK(key2C.SignCompact(hashMsg, detsigc));
-    BOOST_CHECK(detsig == ParseHex("1c52d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
-    BOOST_CHECK(detsigc == ParseHex("2052d8a32079c11e79db95af63bb9600c5b04f21a9ca33dc129c2bfa8ac9dc1cd561d8ae5e0f6c1a16bde3719c64c2fd70e404b6428ab9a69566962e8771b5944d"));
+    BOOST_CHECK(detsig == ParseHex("1caf874275fc12e344969ed4ec89cd1f4974ec816d63391f0e002d3fb81a22c25e00edcf093fdf460f45d9a3ca918d321a21539dac276f8d81a64818c62e8e9517"));
+    BOOST_CHECK(detsigc == ParseHex("20af874275fc12e344969ed4ec89cd1f4974ec816d63391f0e002d3fb81a22c25e00edcf093fdf460f45d9a3ca918d321a21539dac276f8d81a64818c62e8e9517"));
 }
 
 BOOST_AUTO_TEST_CASE(key_signature_tests)
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
 
     for (int i = 1; i <=20; ++i) {
         sig.clear();
-        BOOST_CHECK(key.Sign(msg_hash, sig, false, i));
+        key.Sign(msg_hash, sig, false, i);
         found = sig[3] == 0x21 && sig[4] == 0x00;
         if (found) {
             break;
@@ -177,47 +177,15 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     bool found_small = false;
     for (int i = 0; i < 256; ++i) {
         sig.clear();
-        std::string msg = "A message to be signed" + ToString(i);
+        std::string msg = "A message to be signed" + std::to_string(i);
         msg_hash = Hash(msg.begin(), msg.end());
-        BOOST_CHECK(key.Sign(msg_hash, sig));
+        key.Sign(msg_hash, sig);
         found = sig[3] == 0x20;
         BOOST_CHECK(sig.size() <= 70);
         found_small |= sig.size() < 70;
     }
     BOOST_CHECK(found);
     BOOST_CHECK(found_small);
-}
-
-BOOST_AUTO_TEST_CASE(key_key_negation)
-{
-    // create a dummy hash for signature comparison
-    unsigned char rnd[8];
-    std::string str = "Bitcoin key verification\n";
-    GetRandBytes(rnd, sizeof(rnd));
-    uint256 hash;
-    CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
-
-    // import the static test key
-    CKey key = DecodeSecret(strSecret1C);
-
-    // create a signature
-    std::vector<unsigned char> vch_sig;
-    std::vector<unsigned char> vch_sig_cmp;
-    key.Sign(hash, vch_sig);
-
-    // negate the key twice
-    BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
-    key.Negate();
-    // after the first negation, the signature must be different
-    key.Sign(hash, vch_sig_cmp);
-    BOOST_CHECK(vch_sig_cmp != vch_sig);
-    BOOST_CHECK(key.GetPubKey().data()[0] == 0x02);
-    key.Negate();
-    // after the second negation, we should have the original key and thus the
-    // same signature
-    key.Sign(hash, vch_sig_cmp);
-    BOOST_CHECK(vch_sig_cmp == vch_sig);
-    BOOST_CHECK(key.GetPubKey().data()[0] == 0x03);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CLIENTMODEL_H
-#define BITCOIN_QT_CLIENTMODEL_H
+#ifndef WORLDCOIN_QT_CLIENTMODEL_H
+#define WORLDCOIN_QT_CLIENTMODEL_H
 
 #include <QObject>
 #include <QDateTime>
@@ -40,13 +40,13 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Bitcoin network client. */
+/** Model for Worldcoin network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
     ~ClientModel();
 
     interfaces::Node& node() const { return m_node; }
@@ -69,7 +69,6 @@ public:
     bool isReleaseVersion() const;
     QString formatClientStartupTime() const;
     QString dataDir() const;
-    QString blocksDir() const;
 
     bool getProxyInfo(std::string& ip_port) const;
 
@@ -90,8 +89,7 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    //! A thread to interact with m_node asynchronously
-    QThread* const m_thread;
+    QTimer *pollTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
@@ -111,10 +109,11 @@ Q_SIGNALS:
     void showProgress(const QString &title, int nProgress);
 
 public Q_SLOTS:
+    void updateTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();
     void updateBanlist();
 };
 
-#endif // BITCOIN_QT_CLIENTMODEL_H
+#endif // WORLDCOIN_QT_CLIENTMODEL_H

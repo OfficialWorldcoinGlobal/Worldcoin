@@ -1,27 +1,22 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TEST_RPCNESTEDTESTS_H
-#define BITCOIN_QT_TEST_RPCNESTEDTESTS_H
+#ifndef WORLDCOIN_QT_TEST_RPCNESTEDTESTS_H
+#define WORLDCOIN_QT_TEST_RPCNESTEDTESTS_H
 
 #include <QObject>
 #include <QTest>
 
-namespace interfaces {
-class Node;
-} // namespace interfaces
+#include <txdb.h>
+#include <txmempool.h>
 
 class RPCNestedTests : public QObject
 {
-public:
-    RPCNestedTests(interfaces::Node& node) : m_node(node) {}
-    interfaces::Node& m_node;
-
     Q_OBJECT
 
     private Q_SLOTS:
     void rpcNestedTests();
 };
 
-#endif // BITCOIN_QT_TEST_RPCNESTEDTESTS_H
+#endif // WORLDCOIN_QT_TEST_RPCNESTEDTESTS_H

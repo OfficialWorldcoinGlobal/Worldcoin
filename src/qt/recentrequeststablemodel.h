@@ -1,17 +1,15 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
-#define BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
+#ifndef WORLDCOIN_QT_RECENTREQUESTSTABLEMODEL_H
+#define WORLDCOIN_QT_RECENTREQUESTSTABLEMODEL_H
 
-#include <qt/sendcoinsrecipient.h>
+#include <qt/walletmodel.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 #include <QDateTime>
-
-class WalletModel;
 
 class RecentRequestEntry
 {
@@ -45,14 +43,14 @@ class RecentRequestEntryLessThan
 public:
     RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
         column(nColumn), order(fOrder) {}
-    bool operator()(const RecentRequestEntry& left, const RecentRequestEntry& right) const;
+    bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
 
 private:
     int column;
     Qt::SortOrder order;
 };
 
-/** Model for list of recently generated payment requests / bitcoin: URIs.
+/** Model for list of recently generated payment requests / worldcoin: URIs.
  * Part of wallet model.
  */
 class RecentRequestsTableModel: public QAbstractTableModel
@@ -78,7 +76,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex index(int row, int column, const QModelIndex &parent) const;
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
@@ -96,7 +94,7 @@ private:
     WalletModel *walletModel;
     QStringList columns;
     QList<RecentRequestEntry> list;
-    int64_t nReceiveRequestsMaxId{0};
+    int64_t nReceiveRequestsMaxId;
 
     /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
     void updateAmountColumnTitle();
@@ -104,4 +102,4 @@ private:
     QString getAmountTitle();
 };
 
-#endif // BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H
+#endif // WORLDCOIN_QT_RECENTREQUESTSTABLEMODEL_H

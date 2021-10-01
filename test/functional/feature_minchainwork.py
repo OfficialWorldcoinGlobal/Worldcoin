@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2018 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test logic for setting nMinimumChainWork on command line.
@@ -17,19 +17,22 @@ only succeeds past a given node once its nMinimumChainWork has been exceeded.
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WorldcoinTestFramework
 from test_framework.util import connect_nodes, assert_equal
 
 # 2 hashes required per regtest block (with no difficulty adjustment)
 REGTEST_WORK_PER_BLOCK = 2
 
-class MinimumChainWorkTest(BitcoinTestFramework):
+class MinimumChainWorkTest(WorldcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
 
         self.extra_args = [[], ["-minimumchainwork=0x65"], ["-minimumchainwork=0x65"]]
         self.node_min_work = [0, 101, 101]
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def setup_network(self):
         # This test relies on the chain setup being:
@@ -51,8 +54,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
 
         num_blocks_to_generate = int((self.node_min_work[1] - starting_chain_work) / REGTEST_WORK_PER_BLOCK)
         self.log.info("Generating %d blocks on node0", num_blocks_to_generate)
-        hashes = self.nodes[0].generatetoaddress(num_blocks_to_generate,
-                                                 self.nodes[0].get_deterministic_priv_key().address)
+        hashes = self.nodes[0].generate(num_blocks_to_generate)
 
         self.log.info("Node0 current chain work: %s", self.nodes[0].getblockheader(hashes[-1])['chainwork'])
 
@@ -73,7 +75,7 @@ class MinimumChainWorkTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getblockcount(), starting_blockcount)
 
         self.log.info("Generating one more block")
-        self.nodes[0].generatetoaddress(1, self.nodes[0].get_deterministic_priv_key().address)
+        self.nodes[0].generate(1)
 
         self.log.info("Verifying nodes are all synced")
 

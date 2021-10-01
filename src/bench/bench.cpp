@@ -1,22 +1,15 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
 
-#include <chainparams.h>
-#include <test/util/setup_common.h>
-#include <validation.h>
-
-#include <algorithm>
 #include <assert.h>
-#include <iomanip>
 #include <iostream>
-#include <numeric>
+#include <iomanip>
+#include <algorithm>
 #include <regex>
-
-const RegTestingSetup* g_testing_setup = nullptr;
-const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+#include <numeric>
 
 void benchmark::ConsolePrinter::header()
 {
@@ -115,18 +108,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     printer.header();
 
     for (const auto& p : benchmarks()) {
-        RegTestingSetup test{};
-        assert(g_testing_setup == nullptr);
-        g_testing_setup = &test;
-        {
-            LOCK(cs_main);
-            assert(::ChainActive().Height() == 0);
-            const bool witness_enabled{IsWitnessEnabled(::ChainActive().Tip(), Params().GetConsensus())};
-            assert(witness_enabled);
-        }
-
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
-             g_testing_setup = nullptr;
             continue;
         }
 
@@ -139,7 +121,6 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
             p.second.func(state);
         }
         printer.result(state);
-        g_testing_setup = nullptr;
     }
 
     printer.footer();

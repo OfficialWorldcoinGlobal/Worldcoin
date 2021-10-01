@@ -1,14 +1,15 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_CRYPTER_H
-#define BITCOIN_WALLET_CRYPTER_H
+#ifndef WORLDCOIN_WALLET_CRYPTER_H
+#define WORLDCOIN_WALLET_CRYPTER_H
 
+#include <keystore.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
-#include <script/signingprovider.h>
 
+#include <atomic>
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
@@ -108,8 +109,54 @@ public:
     }
 };
 
-bool EncryptSecret(const CKeyingMaterial& vMasterKey, const CKeyingMaterial &vchPlaintext, const uint256& nIV, std::vector<unsigned char> &vchCiphertext);
-bool DecryptSecret(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCiphertext, const uint256& nIV, CKeyingMaterial& vchPlaintext);
-bool DecryptKey(const CKeyingMaterial& vMasterKey, const std::vector<unsigned char>& vchCryptedSecret, const CPubKey& vchPubKey, CKey& key);
+/** Keystore which keeps the private keys encrypted.
+ * It derives from the basic key store, which is used if no encryption is active.
+ */
+class CCryptoKeyStore : public CBasicKeyStore
+{
+private:
 
-#endif // BITCOIN_WALLET_CRYPTER_H
+    CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
+
+    //! if fUseCrypto is true, mapKeys must be empty
+    //! if fUseCrypto is false, vMasterKey must be empty
+    std::atomic<bool> fUseCrypto;
+
+    //! keeps track of whether Unlock has run a thorough check before
+    bool fDecryptionThoroughlyChecked;
+
+protected:
+    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+
+    bool SetCrypted();
+
+    //! will encrypt previously unencrypted keys
+    bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
+
+    bool Unlock(const CKeyingMaterial& vMasterKeyIn);
+    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
+
+public:
+    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
+    {
+    }
+
+    bool IsCrypted() const { return fUseCrypto; }
+    bool IsLocked() const;
+    bool Lock();
+
+    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
+    bool HaveKey(const CKeyID &address) const override;
+    bool GetKey(const CKeyID &address, CKey& keyOut) const override;
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
+    std::set<CKeyID> GetKeys() const override;
+
+    /**
+     * Wallet status (encrypted, locked) changed.
+     * Note: Called without locks held.
+     */
+    boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
+};
+
+#endif // WORLDCOIN_WALLET_CRYPTER_H

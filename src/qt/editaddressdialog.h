@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_EDITADDRESSDIALOG_H
-#define BITCOIN_QT_EDITADDRESSDIALOG_H
+#ifndef WORLDCOIN_QT_EDITADDRESSDIALOG_H
+#define WORLDCOIN_QT_EDITADDRESSDIALOG_H
 
 #include <QDialog>
 
@@ -30,7 +30,7 @@ public:
         EditSendingAddress
     };
 
-    explicit EditAddressDialog(Mode mode, QWidget *parent = nullptr);
+    explicit EditAddressDialog(Mode mode, QWidget *parent = 0);
     ~EditAddressDialog();
 
     void setModel(AddressTableModel *model);
@@ -56,4 +56,4 @@ private:
     QString address;
 };
 
-#endif // BITCOIN_QT_EDITADDRESSDIALOG_H
+#endif // WORLDCOIN_QT_EDITADDRESSDIALOG_H

@@ -1,29 +1,35 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INIT_H
-#define BITCOIN_INIT_H
+#ifndef WORLDCOIN_INIT_H
+#define WORLDCOIN_INIT_H
 
 #include <memory>
 #include <string>
-#include <util/system.h>
+#include <util.h>
 
-struct NodeContext;
-namespace boost {
+class CScheduler;
+class CWallet;
+
+class WalletInitInterface;
+extern const WalletInitInterface& g_wallet_init_interface;
+
+namespace boost
+{
 class thread_group;
 } // namespace boost
 
 /** Interrupt threads */
-void Interrupt(NodeContext& node);
-void Shutdown(NodeContext& node);
+void Interrupt();
+void Shutdown();
 //!Initialize the logging infrastructure
 void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction();
 
-/** Initialize bitcoin core: Basic context setup.
+/** Initialize worldcoin core: Basic context setup.
  *  @note This can be done before daemonization. Do not call Shutdown() if this function fails.
  *  @pre Parameters should be parsed and config file should be read.
  */
@@ -41,17 +47,17 @@ bool AppInitParameterInteraction();
  */
 bool AppInitSanityChecks();
 /**
- * Lock bitcoin core data directory.
+ * Lock worldcoin core data directory.
  * @note This should only be done after daemonization. Do not call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitSanityChecks should have been called.
  */
 bool AppInitLockDataDirectory();
 /**
- * Bitcoin core main initialization.
+ * Worldcoin core main initialization.
  * @note This should only be done after daemonization. Call Shutdown() if this function fails.
  * @pre Parameters should be parsed and config file should be read, AppInitLockDataDirectory should have been called.
  */
-bool AppInitMain(NodeContext& node);
+bool AppInitMain();
 
 /**
  * Setup the arguments for gArgs
@@ -61,4 +67,4 @@ void SetupServerArgs();
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
 
-#endif // BITCOIN_INIT_H
+#endif // WORLDCOIN_INIT_H

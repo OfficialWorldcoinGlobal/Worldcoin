@@ -1,16 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UINT256_H
-#define BITCOIN_UINT256_H
+#ifndef WORLDCOIN_UINT256_H
+#define WORLDCOIN_UINT256_H
 
 #include <assert.h>
 #include <cstring>
+#include <stdexcept>
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <crypto/common.h>
 
 /** Template base class for fixed-sized opaque blobs. */
 template<unsigned int BITS>
@@ -121,6 +123,16 @@ class uint256 : public base_blob<256> {
 public:
     uint256() {}
     explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+
+    /** A cheap hash function that just returns 64 bits from the result, it can be
+     * used when the contents are considered uniformly random. It is not appropriate
+     * when the value can easily be influenced from outside as e.g. a network adversary could
+     * provide values to trigger worst-case behavior.
+     */
+    uint64_t GetCheapHash() const
+    {
+        return ReadLE64(data);
+    }
 };
 
 /* uint256 from const char *.
@@ -144,6 +156,4 @@ inline uint256 uint256S(const std::string& str)
     return rv;
 }
 
-uint256& UINT256_ONE();
-
-#endif // BITCOIN_UINT256_H
+#endif // WORLDCOIN_UINT256_H

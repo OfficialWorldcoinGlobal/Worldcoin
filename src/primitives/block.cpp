@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,18 +7,20 @@
 
 #include <hash.h>
 #include <tinyformat.h>
-#include <crypto/scrypt.h>
+#include <utilstrencodings.h>
+#include <crypto/common.h>
 
-uint256 CBlockHeader::GetHash() const
+void CBlockHeader::SetAuxpow (std::unique_ptr<CAuxPow> apow)
 {
-    return SerializeHash(*this);
-}
-
-uint256 CBlockHeader::GetPoWHash() const
-{
-    uint256 thash;
-    scrypt_1024_1_1_256((char*)&nVersion, (char*)&thash);
-    return thash;
+    if (apow != nullptr)
+    {
+        auxpow.reset(apow.release());
+        SetAuxpowFlag(true);
+    } else
+    {
+        auxpow.reset();
+        SetAuxpowFlag(false);
+    }
 }
 
 std::string CBlock::ToString() const

@@ -1,8 +1,10 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Worldcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/platformstyle.h>
+
+#include <qt/guiconstants.h>
 
 #include <QApplication>
 #include <QColor>
@@ -114,6 +116,11 @@ QIcon PlatformStyle::SingleColorIcon(const QIcon& icon) const
     return ColorizeIcon(icon, SingleColor());
 }
 
+QIcon PlatformStyle::TextColorIcon(const QString& filename) const
+{
+    return ColorizeIcon(filename, TextColor());
+}
+
 QIcon PlatformStyle::TextColorIcon(const QIcon& icon) const
 {
     return ColorizeIcon(icon, TextColor());
@@ -132,6 +139,6 @@ const PlatformStyle *PlatformStyle::instantiate(const QString &platformId)
                     platform_styles[x].useExtraSpacing);
         }
     }
-    return nullptr;
+    return 0;
 }
 

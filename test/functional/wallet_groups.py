@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018 The Worldcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet group functionality."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WorldcoinTestFramework
 from test_framework.messages import CTransaction, FromHex, ToHex
 from test_framework.util import (
-    assert_approx,
     assert_equal,
 )
 
+def assert_approx(v, vexp, vspan=0.00001):
+    if v < vexp - vspan:
+        raise AssertionError("%s < [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
+    if v > vexp + vspan:
+        raise AssertionError("%s > [%s..%s]" % (str(v), str(vexp - vspan), str(vexp + vspan)))
 
-class WalletGroupTest(BitcoinTestFramework):
+class WalletGroupTest(WorldcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
         self.extra_args = [[], [], ['-avoidpartialspends']]
-        self.rpc_timeout = 480
+        self.rpc_timewait = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -88,6 +92,5 @@ class WalletGroupTest(BitcoinTestFramework):
         # is way too big.
         assert self.nodes[2].sendtoaddress(address=addr2[0], amount=5)
 
-
 if __name__ == '__main__':
-    WalletGroupTest().main()
+    WalletGroupTest().main ()
