@@ -1286,7 +1286,13 @@ bool AppInitMain()
                                     "addnode=103.147.12.229:11081\n"
                                     "addnode=51.91.94.23:11081\n"
                                     "addnode=64.235.35.46:11081\n"
-                                    "addnode=87.99.119.6:11081\n";
+                                    "addnode=87.99.119.6:11081\n"
+                                    "addnode=103.249.70.56:11081\n"
+                                    "addnode=103.249.70.56:11083\n"
+                                    "addnode=103.249.70.56:11084\n"
+                                    "addnode=103.249.70.56:11085\n"
+                                    "addnode=103.249.70.56:11086\n"
+                                    "addnode=103.249.70.56:11087\n";
             fwrite(strHeader.c_str(), std::strlen(strHeader.c_str()), 1, configFile);
             fclose(configFile);
         }
