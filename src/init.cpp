@@ -1267,7 +1267,6 @@ bool AppInitMain()
                                     "server=1\n"
                                     "listen=1\n"
                                     "daemon=1\n"
-                                    "prune=550\n"
                                     "gen=0\n"
                                     "port=11081\n"
                                     "rpcport=11082\n"
