@@ -29,9 +29,9 @@ NetworkStyle::NetworkStyle(const QString &_appName, const int iconColorHueShift,
     // load pixmap
     QPixmap pixmap;
     if (std::char_traits<char>::length(_titleAddText) == 0) {
-        pixmap.load(":/icons/worldcoin");
-    } else {
         pixmap.load(":/icons/worldcoin_splash");
+    } else {
+        pixmap.load(":/icons/worldcoin");
     }
 
     if(iconColorHueShift != 0 && iconColorSaturationReduction != 0)

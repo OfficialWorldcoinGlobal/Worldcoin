@@ -83,7 +83,7 @@ public:
         consensus.BIP16Exception = uint256();
         //consensus.BIP16Height = 0; // October 1, 2012 it was before WDC genesis // int64 nBIP16SwitchTime = 1349049600
         consensus.BIP34Height = 71000000;      // WDC dev note: after this height only block version 2 are allowed;
-        consensus.BIP34Hash = uint256S("0xfa09d204a83a768ed5a7c8d441fa62f2043abf420cff1226c7b4329aeb9d51cf");
+        consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 999999999; // WDC dev note: disabled for now     // OP_CHECKLOCKTIMEVERIFY
         consensus.BIP66Height = 999999999; // WDC dev note: disabled for now
 
@@ -91,8 +91,8 @@ public:
         consensus.nDiffChangeTarget = 600000;
         consensus.patchBlockRewardDuration = 20160;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
-        consensus.nPowTargetTimespan = 0.35 *24 * 60 * 60;	// litecoin: 0.35 day
-        consensus.nPowTargetSpacing = 15;					// litecoin: 15 sec
+        consensus.nPowTargetTimespan = 0.35 *24 * 60 * 60;	// worldcoin: 0.35 day
+        consensus.nPowTargetSpacing = 15;					// worldcoin: 15 sec
         
         consensus.nTargetTimespanRe = 60 * 60;	            // worldcoin: 1 hour
         consensus.nTargetSpacingRe = 1 * 30;				// worldcoin: 30 sec
@@ -120,13 +120,10 @@ public:
 
 
         // The best chain should have at least this much work.
-        //consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000004ea75c690519ca29");
-        //Fix me: The best chain should have at least this much work. 
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000100010");
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000039074d9094ce9aa5");
 		
         // By default assume that the signatures in ancestors of this block are valid.
-		//Fix me: ??
-        consensus.defaultAssumeValid = uint256S("0xb34a457c601ef8ce3294116e3296078797be7ded1b0d12515395db9ab5e93ab8"); //534292 - ????
+        consensus.defaultAssumeValid = uint256S("0xd16fbc79554b9759c6c81c90e509bc90e94764637ae43b86a4573ab33807f664");
 
         // AuxPoW parameters
 		consensus.nAuxpowChainId = AUXPOW_CHAIN_ID;
@@ -174,37 +171,13 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("43.132.183.9:1181");
-        vSeeds.emplace_back("72.18.200.11");
-        vSeeds.emplace_back("103.147.12.229");
-        vSeeds.emplace_back("64.235.35.46");
-        
-        vSeeds.emplace_back("seednode.worldcoin.global");
-        vSeeds.emplace_back("seednode2.worldcoin.global");
-        vSeeds.emplace_back("seednode3.worldcoin.global");
-        vSeeds.emplace_back("seednode4.worldcoin.global");
-        vSeeds.emplace_back("seednode5.worldcoin.global");
-        vSeeds.emplace_back("seednode6.worldcoin.global");
-        vSeeds.emplace_back("seednode7.worldcoin.global");
-        vSeeds.emplace_back("seednode8.worldcoin.global");
-        vSeeds.emplace_back("seednode9.worldcoin.global");
-        vSeeds.emplace_back("seednode10.worldcoin.global");
-        vSeeds.emplace_back("seednode11.worldcoin.global");
-        vSeeds.emplace_back("seednode12.worldcoin.global");
-        vSeeds.emplace_back("seednode13.worldcoin.global");
-        vSeeds.emplace_back("seednode14.worldcoin.global");  
 
-        //vSeeds.push_back("103.125.234.117");
-        //vSeeds.push_back("69.11.204.43");
-        //vSeeds.push_back("72.18.200.11");
-        //vSeeds.push_back("64.235.35.46");
-        //vSeeds.push_back("64.34.216.15");
-        //vSeeds.push_back("158.51.97.132");
-        //vSeeds.push_back("178.238.228.182");
-        //vSeeds.push_back("91.206.16.214");
-        //vSeeds.push_back("95.217.78.79");
-        //vSeeds.push_back("162.253.155.168");
-        //vSeeds.push_back("194.15.111.7");
+        vSeeds.emplace_back("72.18.200.11:11081");
+        vSeeds.emplace_back("72.18.200.81:11081");
+        vSeeds.emplace_back("51.91.94.23:11081");
+        vSeeds.emplace_back("64.235.35.46:11081");
+        vSeeds.emplace_back("87.99.119.6:11081");
+        vSeeds.emplace_back("103.147.12.229:11081");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,73);
         // base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);  // 
@@ -227,18 +200,31 @@ public:
         checkpointData = {
             {
                 {  0,       uint256S("0x7231b064d3e620c55960abce2963ea19e1c3ffb6f5ff70e975114835a7024107")},
-                {  6120000, uint256S("0xccf16a2e8b20edae90aa78fa26c4f8b9b048deef708ea3fd5b2e6d596909eef9")},
-                {  6569800, uint256S("0x191398ee21b43bc524966b3daa129ca93eb06f8883013abfcf47f3f2e0eaaacc")},
-                {  6570522, uint256S("0x6c5cfeee8f724d83ec1331cc78fd288661bff24415d01cc5dc006ee467e93593")},
+                {  1,       uint256S("0x1a48c2bf97e0df6d4f03cd5cb0896ef43b04987048fbeb5ab2dc013335e40731")},
+                {  50, uint256S("0x98fb00f9a3559063b2bf890fc0b16b99fecd3f87634ffd384917603fb535320b")},
+                {  100, uint256S("0xf3ab5c3dc665f4e36654af1208910d72075664c9a9883a3d1403255c50a72996")},
+                {  1000, uint256S("0x3cbc5f253052bc892fc77c5419e06afbe1237eb187df0693a332d6a836c9417c")},
+                {  5000, uint256S("0xd4641bd171ccfbd571bead813ee31cee4d60581b28c1de6be68fb1fde63643f0")},
+                {  10000, uint256S("0x1f1b1265d26e097af90ad524d3342b13765750e77b7fec77ff957f1147ef5b41")},
+                {  50000, uint256S("0x430d653a28a4bbaf3da98b6bcbc034aaf3151950eb0cff680c36b09c12d7c2b3")},
+                {  100000, uint256S("0x15394ecf8684bb31821ef0d9ddffe56ea49364d2e2cdcb771c94f95f0817b7c1")},
+                {  500000, uint256S("0x4c94848c214c4779cbaa15d83b0bbee57afce5e754184368e6b25ac084689608")},
+                {  1000000, uint256S("0xce846668f4120671a9a5fc1b863482c5991c451b9a848a57cf9f563bf54a5baf")},
+                {  2000000, uint256S("0xf82b25241763f20e1f5981390b6580a46e8e9bfb9dd3dd8c771a4115be4b4996")},
+                {  3000000, uint256S("0xeb8a9b0a0692dcdc66edc216aba6c316b62b4b0125263bf161993ca530969265")},
+                {  4000000, uint256S("0x938eb1050f5f7c4d11b6e8435413e4d98c906fcb572ef4b062d3559c4dd4f124")},
+                {  5000000, uint256S("0x0418d1e279f1c1cf4c52eeaf668356622931d100147454c020a2ae6f13185acd")},
+                {  6000000, uint256S("0x0a89bd046c42d7a0c125173209a5de6bb8f8cf3a3748a588796c5ad7b43c682e")},
                 {  6570530, uint256S("0x0481191e24da748820450e562f7b4ad450eddcabe66291cab91b1a947996a5b1")},
+                {  6642500, uint256S("0xd16fbc79554b9759c6c81c90e509bc90e94764637ae43b86a4573ab33807f664")},
             }
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats 4096 a601455787cb65ffc325dda4751a99cf01d1567799ec4b04f45bb05f9ef0cbde
-            /* nTime    */ 1613726683,
-            /* nTxCount */ 8296601,
-            /* dTxRate  */ 0.02991589890928619
+            // Data from rpc: getchaintxstats 6642500 d16fbc79554b9759c6c81c90e509bc90e94764637ae43b86a4573ab33807f664
+            /* nTime    */ 1635180496,
+            /* nTxCount */ 8839767,
+            /* dTxRate  */ 0.03314798533777966
         };
 
         /* disable fallback fee on mainnet */

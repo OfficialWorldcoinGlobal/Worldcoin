@@ -533,7 +533,7 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/Worldcoin-Network/worldcoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/OfficialWorldcoinGlobal/Worldcoin>";
     const std::string URL_WEBSITE = "<https://www.worldcoin.global/>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2013, COPYRIGHT_YEAR) + " ") + "\n" +
@@ -1250,7 +1250,49 @@ bool AppInitMain()
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
-    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", WORLDCOIN_CONF_FILENAME)).string());
+
+
+    // Create worldcoin.conf file:
+    fs::path config_file_path = GetConfigFile(gArgs.GetArg("-conf", WORLDCOIN_CONF_FILENAME));
+    if (fs::exists(config_file_path)) {
+        LogPrintf("Config file: %s\n", config_file_path.string());
+    } else if (gArgs.IsArgSet("-conf")) {
+        // Warn if no conf file exists at path provided by user
+        InitWarning(strprintf(_("The specified config file %s does not exist\n"), config_file_path.string()));
+    } else {
+        FILE* configFile = fopen(GetConfigFile(gArgs.GetArg("-conf", WORLDCOIN_CONF_FILENAME)).string().c_str(), "a");
+        if (configFile != NULL) {
+            std::string strHeader = "rpcuser=username\n"
+                                    "rpcpassword=password\n"
+                                    "server=1\n"
+                                    "listen=1\n"
+                                    "daemon=1\n"
+                                    "prune=550\n"
+                                    "gen=0\n"
+                                    "port=11081\n"
+                                    "rpcport=11082\n"
+                                    "onlynet=ipv4\n"
+                                    "rpcbind=127.0.0.1\n"
+                                    "maxconnections=80\n"
+                                    "fallbackfee=0.0001\n"
+                                    "rpcallowip=127.0.0.1\n"
+                                    "deprecatedrpc=accounts\n"
+                                    "\n"
+                                    "\n"
+                                    "# ADDNODES:\n"
+                                    "\n"
+                                    "addnode=72.18.200.11:11081\n"
+                                    "addnode=72.18.200.81:11081\n"
+                                    "addnode=103.147.12.229:11081\n"
+                                    "addnode=51.91.94.23:11081\n"
+                                    "addnode=64.235.35.46:11081\n"
+                                    "addnode=87.99.119.6:11081\n";
+            fwrite(strHeader.c_str(), std::strlen(strHeader.c_str()), 1, configFile);
+            fclose(configFile);
+        }
+    }
+
+
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     // Warn about relative -datadir path.
