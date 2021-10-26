@@ -1,0 +1,7 @@
+[main]
+host = https://www.transifex.com
+
+[worldcoin.qt-translation-017x]
+file_filter = src/qt/locale/worldcoin_<lang>.ts
+source_file = src/qt/locale/worldcoin_en.ts
+source_lang = en
