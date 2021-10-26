@@ -1616,7 +1616,7 @@ void CConnman::ThreadDNSAddressSeed()
         for (auto pnode : vNodes) {
             nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound;
         }
-        if (nRelevant >= 6) {
+        if (nRelevant >= 2) {
             LogPrintf("P2P peers available. Skipped DNS seeding.\n");
             return;
         }
@@ -1637,8 +1637,8 @@ void CConnman::ThreadDNSAddressSeed()
             std::vector<CNetAddr> vIPs;
             std::vector<CAddress> vAdd;
             ServiceFlags requiredServiceBits = GetDesirableServiceFlags(NODE_NONE);
-	    std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
-          //  std::string host = strprintf("%s", seed);
+	//std::string host = strprintf("x%x.%s", requiredServiceBits, seed);
+            std::string host = strprintf("%s", seed);
             CNetAddr resolveSource;
             if (!resolveSource.SetInternal(host)) {
                 continue;
@@ -1782,7 +1782,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             return;
 
         // Add seed nodes if DNS seeds are all down (an infrastructure attack?).
-        if (addrman.size() < 6 && (GetTime() - nStart > 3)) {
+        if (addrman.size() == 0 && (GetTime() - nStart > 1)) {
             static bool done = false;
             if (!done) {
                 LogPrintf("Adding fixed seed nodes as DNS doesn't seem to be available.\n");
