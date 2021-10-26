@@ -42,10 +42,10 @@ QString WorldcoinUnits::longName(int unit)
 {
     switch(unit)
     {
-    case WDC: return QString("Worldcoins");
-    case mWDC: return QString("miliWorldcoins");
-    case uWDC: return QString("microWorldcoins");
-    case SAT: return QString("satoWorldcoins");
+    case WDC: return QString("WDC");
+    case mWDC: return QString("mWDC");
+    case uWDC: return QString("uWDC");
+    case SAT: return QString("SAT");
     default: return QString("???");
     }
 }
