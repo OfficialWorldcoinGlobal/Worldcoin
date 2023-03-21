@@ -134,12 +134,8 @@ AC_DEFUN([WORLDCOIN_QT_CONFIGURE],[
     if test "x$worldcoin_cv_need_acc_widget" = xyes; then
       _WORLDCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(AccessibleFactory)], [-lqtaccessiblewidgets])
     fi
-    _WORLDCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin)],[-lqminimal])
-    AC_DEFINE(QT_QPA_PLATFORM_MINIMAL, 1, [Define this symbol if the minimal qt platform exists])
     if test "x$TARGET_OS" = xwindows; then
       _WORLDCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)],[-lqwindows])
-      _WORLDCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin)],[-lqminimal])
-+     _WORLDCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsPrinterSupportPlugin)],[-lwindowsprintersupport])
       AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
     elif test "x$TARGET_OS" = xlinux; then
       _WORLDCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb -lxcb-static])
@@ -361,20 +357,11 @@ AC_DEFUN([_WORLDCOIN_QT_FIND_STATIC_PLUGINS],[
       if test -d "$qt_plugin_path/accessible"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
       fi
-      QT_LIBS="$QT_LIBS -L$qt_plugin_path/printsupport"
+    fi
      if test "x$use_pkgconfig" = xyes; then
      : dnl
      m4_ifdef([PKG_CHECK_MODULES],[
-       if test x$worldcoin_cv_qt58 = xno; then
          PKG_CHECK_MODULES([QTPLATFORM], [Qt5PlatformSupport], [QT_LIBS="$QTPLATFORM_LIBS $QT_LIBS"])
-       else
-         PKG_CHECK_MODULES([QTFONTDATABASE], [Qt5FontDatabaseSupport], [QT_LIBS="-lQt5FontDatabaseSupport $QT_LIBS"])
-         PKG_CHECK_MODULES([QTEVENTDISPATCHER], [Qt5EventDispatcherSupport], [QT_LIBS="-lQt5EventDispatcherSupport $QT_LIBS"])
-         PKG_CHECK_MODULES([QTTHEME], [Qt5ThemeSupport], [QT_LIBS="-lQt5ThemeSupport $QT_LIBS"])
-         PKG_CHECK_MODULES([QTDEVICEDISCOVERY], [Qt5DeviceDiscoverySupport], [QT_LIBS="-lQt5DeviceDiscoverySupport $QT_LIBS"])
-         PKG_CHECK_MODULES([QTACCESSIBILITY], [Qt5AccessibilitySupport], [QT_LIBS="-lQt5AccessibilitySupport $QT_LIBS"])
-         PKG_CHECK_MODULES([QTFB], [Qt5FbSupport], [QT_LIBS="-lQt5FbSupport $QT_LIBS"])
-                fi
        if test "x$TARGET_OS" = xlinux; then
          PKG_CHECK_MODULES([X11XCB], [x11-xcb], [QT_LIBS="$X11XCB_LIBS $QT_LIBS"])
          if ${PKG_CONFIG} --exists "Qt5Core >= 5.5" 2>/dev/null; then
@@ -406,17 +393,8 @@ AC_DEFUN([_WORLDCOIN_QT_FIND_STATIC_PLUGINS],[
          if test "x$worldcoin_cv_need_platformsupport" = xyes; then
            if test x$worldcoin_cv_qt58 = xno; then
              WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}PlatformSupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXPlatformSupport not found)))
-           else
-             WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}FontDatabaseSupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXFontDatabaseSupport not found)))
-             WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}EventDispatcherSupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXEventDispatcherSupport not found)))
-             WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}ThemeSupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXThemeSupport not found)))
-             WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}FbSupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXFbSupport not found)))
-             WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}DeviceDiscoverySupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXDeviceDiscoverySupport not found)))
-             WORLDCOIN_QT_CHECK(AC_CHECK_LIB([${QT_LIB_PREFIX}AccessibilitySupport],[main],,WORLDCOIN_QT_FAIL(lib$QT_LIB_PREFIXAccessibilitySupport not found)))
-             QT_LIBS="$QT_LIBS -lversion -ldwmapi -luxtheme"
            fi
          fi
-       fi
      fi
    fi
 ])
