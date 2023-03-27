@@ -1,36 +1,28 @@
 package=zeromq
-$(package)_version=4.3.4
-$(package)_download_path=https://github.com/zeromq/libzmq/releases/download/v$($(package)_version)/
+$(package)_version=4.1.5
+$(package)_download_path=https://github.com/zeromq/zeromq4-1/releases/download/v$($(package)_version)/
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=c593001a89f5a85dd2ddf564805deb860e02471171b3f204944857336295c3e5
-$(package)_patches=remove_libstd_link.patch netbsd_kevent_void.patch
+$(package)_sha256_hash=04aac57f081ffa3a2ee5ed04887be9e205df3a7ddade0027460b8042432bdbcf
+$(package)_patches=enable_static_libraries.patch fix_autotools_static_builds.patch
 
 define $(package)_set_vars
-  $(package)_config_opts = --without-docs --disable-shared --disable-valgrind
-  $(package)_config_opts += --disable-perf --disable-curve-keygen --disable-curve --disable-libbsd
-  $(package)_config_opts += --without-libsodium --without-libgssapi_krb5 --without-pgm --without-norm --without-vmci
-  $(package)_config_opts += --disable-libunwind --disable-radix-tree --without-gcov --disable-dependency-tracking
-  $(package)_config_opts += --disable-Werror --disable-drafts --enable-option-checking
+  $(package)_config_opts=--without-documentation --disable-shared --without-libsodium --disable-curve
   $(package)_config_opts_linux=--with-pic
-  $(package)_config_opts_freebsd=--with-pic
-  $(package)_config_opts_netbsd=--with-pic
-  $(package)_config_opts_openbsd=--with-pic
-  $(package)_config_opts_android=--with-pic
+  $(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/remove_libstd_link.patch && \
-  patch -p1 < $($(package)_patch_dir)/netbsd_kevent_void.patch
+  patch -p1 < $($(package)_patch_dir)/enable_static_libraries.patch && \
+  patch -p1 < $($(package)_patch_dir)/fix_autotools_static_builds.patch && \
+  ./autogen.sh
 endef
 
 define $(package)_config_cmds
-  ./autogen.sh && \
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub config && \
   $($(package)_autoconf)
 endef
 
 define $(package)_build_cmds
-  $(MAKE) src/libzmq.la
+  $(MAKE) libzmq.la
 endef
 
 define $(package)_stage_cmds
@@ -38,5 +30,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf bin share lib/*.la
+  rm -rf bin share
 endef
