@@ -44,7 +44,7 @@ Build Worldcoin Core
 
 1. Clone the Worldcoin Core source code and cd into `worldcoin`
 
-        git clone https://github.com/Worldcoin-Network/Worldcoin.git
+        git clone https://github.com/OfficialWorldcoinGlobal/Worldcoin.git
         cd Worldcoin
 
 2.  Build Worldcoin Core:

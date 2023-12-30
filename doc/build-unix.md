@@ -42,7 +42,7 @@ Optional dependencies:
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  miniupnpc   | UPnP Support     | Firewall-jumping support
- libdb5.1    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
+ libdb5.3    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
@@ -74,15 +74,7 @@ Build requirements:
 
 BerkeleyDB is required for the wallet.
 
-    sudo apt-get install libdb5.1-dev libdb5.1++-dev
-
-       Note that if you have Berkeley DB 4.8 packages installed (i.e. for other
-       wallet software), they are incompatible with the packages for 5.1. You
-       will have to manually download 5.1 from
-       http://download.oracle.com/berkeley-db/db-5.1.29.NC.tar.gz and compile
-       it, install it to /usr/local where the configure script should locate it
-       automatically.
-
+    sudo apt-get install libdb5.3-dev libdb5.3++-dev
 
 See the section "Disable-wallet mode" to build Worldcoin Core without wallet.
 
@@ -118,7 +110,7 @@ built by default.
 
 Build requirements:
 
-    sudo dnf install gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
+    sudo dnf install gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb5.3-devel libdb5.3-cxx-devel python3
 
 Optional:
 
@@ -152,7 +144,7 @@ turned off by default.  See the configure options for upnp behavior desired:
 
 Berkeley DB
 -----------
-It is recommended to use Berkeley DB 5.1. If you have to build it yourself:
+It is recommended to use Berkeley DB 5.3. If you have to build it yourself:
 
 ```shell
 WORLDCOIN_ROOT=$(pwd)
@@ -162,13 +154,13 @@ BDB_PREFIX="${WORLDCOIN_ROOT}/db5"
 mkdir -p $BDB_PREFIX
 
 # Fetch the source and verify that it is not tampered with
-wget 'http://download.oracle.com/berkeley-db/db-5.1.29.NC.tar.gz'
-echo '08238e59736d1aacdd47cfb8e68684c695516c37f4fbe1b8267dde58dc3a576c db-5.1.29.NC.tar.gz' | sha256sum -c
-# -> db-5.1.29.NC.tar.gz: OK
-tar -xzvf db-5.1.29.NC.tar.gz
+wget 'http://download.oracle.com/berkeley-db/db-5.3.28.NC.tar.gz'
+echo '76a25560d9e52a198d37a31440fd07632b5f1f8f9f2b6d5438f4bc3e7c9013ef db-5.3.28.NC.tar.gz' | sha256sum -c
+# -> db-5.3.28.NC.tar.gz: OK
+tar -xzvf db-5.3.28.NC.tar.gz
 
 # Build the library and install to our prefix
-cd db-5.1.29.NC/build_unix/
+cd db-5.3.28.NC/build_unix/
 #  Note: Do a static build so that it can be embedded into the executable, instead of having to find a .so at runtime
 ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 make install
