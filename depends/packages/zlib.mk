@@ -1,8 +1,8 @@
 package=zlib
-$(package)_version=1.2.11
+$(package)_version=1.3
 $(package)_download_path=http://www.zlib.net
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1
+$(package)_sha256_hash=ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
 
 define $(package)_set_vars
 $(package)_build_opts= CC="$($(package)_cc)"
@@ -24,4 +24,3 @@ endef
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install $($(package)_build_opts)
 endef
-
