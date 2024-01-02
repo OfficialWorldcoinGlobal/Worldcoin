@@ -1,11 +1,15 @@
 package=expat
-$(package)_version=2.2.1
-$(package)_download_path=https://downloads.sourceforge.net/project/expat/expat/$($(package)_version)
-$(package)_file_name=$(package)-$($(package)_version).tar.bz2
-$(package)_sha256_hash=1868cadae4c82a018e361e2b2091de103cd820aaacb0d6cfa49bd2cd83978885
+$(package)_version=2.4.8
+$(package)_download_path=https://github.com/libexpat/libexpat/releases/download/R_$(subst .,_,$($(package)_version))/
+$(package)_file_name=$(package)-$($(package)_version).tar.xz
+$(package)_sha256_hash=f79b8f904b749e3e0d20afeadecf8249c55b2e32d4ebb089ae378df479dcaf25
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-static
+  $(package)_config_opts=--disable-shared --without-docbook --without-tests --without-examples
+  $(package)_config_opts += --disable-dependency-tracking --enable-option-checking
+  $(package)_config_opts += --without-xmlwf
+  $(package)_config_opts_linux=--with-pic
+  $(package)_cppflags += -D_DEFAULT_SOURCE
 endef
 
 define $(package)_config_cmds
@@ -18,4 +22,8 @@ endef
 
 define $(package)_stage_cmds
   $(MAKE) DESTDIR=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm -rf share lib/cmake lib/*.la
 endef
